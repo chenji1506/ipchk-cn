@@ -10,7 +10,7 @@ full.txt
 short.txt
 *.mmdb
 *.exe
-lemon-ipw
+ipchk-cn
 .mmdb.tmp
 *.tmp
 

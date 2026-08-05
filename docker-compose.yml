@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: lemon-ipw:latest
+    image: ipchk-cn:latest
     container_name: ipw-backend
     network_mode: host
     volumes:
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
-    image: lemon-ipw-frontend:latest
+    image: ipchk-cn-frontend:latest
     container_name: ipw-frontend
     ports:
       - "3000:3000"

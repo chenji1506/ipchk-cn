@@ -1,4 +1,4 @@
-module lemon-ipw
+module ipchk-cn
 
 go 1.26.2
 

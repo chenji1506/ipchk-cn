@@ -1,6 +1,6 @@
-# Lemon IPW
+# ipchk.cn - IP 查询工具
 
-ipw.cn 替代品，提供 IP 查询、网站检测、SSL 检查、DNS 解析、TCPing 测速等功能。
+基于 GPL-3.0 开源项目 nomdn/ipw-cn 构建的 IP 查询与网络诊断工具站。
 
 ## 功能
 
