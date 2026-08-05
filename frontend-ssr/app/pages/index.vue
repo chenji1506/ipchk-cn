@@ -103,6 +103,14 @@ const ipAddress = ref('');
 const yourIPv4 = ref('');
 const yourIPv6 = ref('');
 
+// 带超时的请求（防止 IPv6 跨境链路挂起阻塞页面）
+function fetchWithTimeout(url: string, ms = 5000): Promise<string> {
+  return Promise.race([
+    $fetch<string>(url),
+    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(timeout)), ms))
+  ]);
+}
+
 // WebRTC 获取本机公网 IPv6（兜底方案：解决手机有 IPv6 但到服务器 IPv6 连接不通的场景）
 function detectIPv6ViaWebRTC(): Promise<string> {
   return new Promise((resolve) => {
@@ -143,11 +151,14 @@ onMounted(async () => {
     highlightedCode.value = '';
   }
 
-  // 三路独立探测：v4 强制 IPv4，v6 强制 IPv6，dual 判断优先级
+  // WebRTC 并行探测（手机有 IPv6 时最可靠，不等 API）
+  const rtcV6Promise = detectIPv6ViaWebRTC();
+
+  // 三路独立探测（带 5s 超时，防止跨境 IPv6 链路挂起）
   const [dualStack, ipV4, ipV6] = await Promise.allSettled([
-    $fetch<string>(config.DualStackAPI),
-    $fetch<string>(config.v4OnlyAPI),
-    $fetch<string>(config.v6OnlyAPI)
+    fetchWithTimeout(config.DualStackAPI),
+    fetchWithTimeout(config.v4OnlyAPI),
+    fetchWithTimeout(config.v6OnlyAPI)
   ]);
 
   if (dualStack.status === 'fulfilled') {
@@ -159,9 +170,9 @@ onMounted(async () => {
   if (ipV6.status === 'fulfilled' && isIPv6(ipV6.value.trim())) {
     yourIPv6.value = ipV6.value.trim();
   }
-  // 兜底：API 探测不到 IPv6 时，用 WebRTC 读本机网卡 IPv6
+  // 兜底：API 探测不到 IPv6 时，用 WebRTC 结果（并行已启动）
   if (!yourIPv6.value) {
-    const v6 = await detectIPv6ViaWebRTC();
+    const v6 = await rtcV6Promise;
     if (v6) {
       yourIPv6.value = v6;
     }
