@@ -224,9 +224,6 @@ useHead({
       Copyright © ipchk.cn 2026  | <img src="/ipv6-s1.svg" alt="IPv6 相关标识"/> | <img src="/ssl-s1.svg" alt="SSL 相关标识"/> | All right reserved
     </div>
     <div class="one-line">
-      本站源码已开源（GPL-3.0）：<a href="https://github.com/chenji1506/ipchk-cn" target="_blank" rel="noreferrer">github.com/chenji1506/ipchk-cn</a>
-    </div>
-    <div class="one-line">
       <a v-if="config.ICP" href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" >{{ config.ICP }}</a>
       <span v-if="config.ICP">&nbsp;|&nbsp;</span>
       <el-image v-if="config.GongAn" style="height: 1em; width: 1em;" src="/备案图标.png" />
