@@ -8,7 +8,7 @@ import { extractHost, formatTime, formatSpeed, formatSize, getStatusCodeClass } 
 const route = useRoute()
 
 useHead({
-  title: 'IPv6网站测速工具 | 全国多节点并发测速 | 柠檬味ipw.cn',
+  title: 'IPv6网站测速工具 | 全国多节点并发测速 | ipchk.cn',
   meta: [
     { name: 'description', content: '专业的IPv6网站测速工具,提供全国多节点并发测速服务,1秒内快速返回网站响应时间、下载速度、页面大小、DNS解析时间、HTTP连接时间等详细信息,支持IPv6网站性能检测与优化,助力IPv6网站性能监控与用户体验提升' },
     { name: 'keywords', content: 'ipv6网站测速,ipv6测速,网站速度测试,ipv6性能检测,网站响应时间,ipv6下载速度,ipv6性能优化,ipv6网站监控' },
@@ -35,14 +35,14 @@ useHead({
         },
         provider: {
           '@type': 'Organization',
-          name: '柠檬味ipw.cn'
+          name: 'ipchk.cn'
         }
       })
     }
   ]
 });
 
-const tmpDomain = ref('https://www.zakoflare.com')
+const tmpDomain = ref('https://ipchk.cn')
 const loading = ref(false)
 const result = ref<any[]>([])
 const error = ref('')
@@ -164,7 +164,7 @@ onMounted(() => {
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：https://zakoflare.com）" 
+        placeholder="请输入域名（如：https://ipchk.cn）" 
       />
       <el-button 
         @click="SpeedTest()" 

@@ -107,8 +107,8 @@ eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 
 ```
-# ping6 6.wsmdn.dpdns.org
-PING 6.wsmdn.dpdns.org(2402:4e00:1013:e500:0:9671:f018:4947 (2402:4e00:1013:e500:0:9671:f018:4947)) 56 data bytes
+# ping6 ipchk.cn
+PING ipchk.cn(2402:4e00:1013:e500:0:9671:f018:4947 (2402:4e00:1013:e500:0:9671:f018:4947)) 56 data bytes
 16 bytes from 2402:4e00:1013:e500:0:9671:f018:4947, icmp_seq=0 hlim=52 time=8.748 ms
 16 bytes from 2402:4e00:1013:e500:0:9671:f018:4947, icmp_seq=1 hlim=52 time=8.715 ms
 16 bytes from 2402:4e00:1013:e500:0:9671:f018:4947, icmp_seq=2 hlim=52 time=8.426 ms
@@ -121,16 +121,16 @@ PING 6.wsmdn.dpdns.org(2402:4e00:1013:e500:0:9671:f018:4947 (2402:4e00:1013:e500
 
 
 ```
-# curl 6.wsmdn.dpdns.org
+# curl ipchk.cn
 240e:1f:1::1
 ```
 
 
-当然，也可以在线 [IPv6 TCPing 测试工具](https://ipw.wsmdn.top/ipv6tcping) 进行检查。
+当然，也可以在线 [IPv6 TCPing 测试工具](https://www.ipchk.cn/ipv6tcping) 进行检查。
 
-此外，通过 [IPv6 地址查询工具](https://ipw.wsmdn.top/ipv6/) 可以查询对应 IPv6 地址所属的地理位置。
+此外，通过 [IPv6 地址查询工具](https://www.ipchk.cn/ipv6/) 可以查询对应 IPv6 地址所属的地理位置。
 
-当网站建设好了后，也可以通过 [工具检测网站IPv6](https://ipw.wsmdn.top/ipv6webcheck/) 是否开启成功。
+当网站建设好了后，也可以通过 [工具检测网站IPv6](https://www.ipchk.cn/ipv6webcheck/) 是否开启成功。
 
 ## reference
 

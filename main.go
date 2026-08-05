@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"lemon-ipw/ipdb"
@@ -15,6 +17,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -802,13 +806,1411 @@ func sslCheckHandler(c *gin.Context) {
 func locateIP(c *gin.Context) {
 	ip := c.Param("ip")
 	slog.Debug("Locating IP", "ip", ip)
-	c.JSON(http.StatusOK, ipdb.SearchIP(ip))
+	var data map[string]interface{}
+	if d := queryIPLocation(ip); d != nil {
+		data = d
+	} else {
+		data = ipdb.SearchIP(ip)
+	}
+	// 命令行访问（curl/wget）→ 格式化美观输出
+	if isCLIUA(c.GetHeader("User-Agent")) {
+		c.String(http.StatusOK, formatLocationText(ip, data))
+		return
+	}
+	c.JSON(http.StatusOK, data)
 }
 func locateUserIP(c *gin.Context) {
 	ip := c.ClientIP()
 	// 可能会有误报，因为某些环境下 ClientIP() 可能返回代理服务器的 IP 地址，而不是用户的真实 IP 地址
 	slog.Debug("Locating user IP", "ip", ip)
-	c.JSON(http.StatusOK, ipdb.SearchIP(ip))
+	var data map[string]interface{}
+	if d := queryIPLocation(ip); d != nil {
+		data = d
+	} else {
+		data = ipdb.SearchIP(ip)
+	}
+	if isCLIUA(c.GetHeader("User-Agent")) {
+		c.String(http.StatusOK, formatLocationText(ip, data))
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
+// isCLIUA 判断是否为 curl/wget 等命令行客户端
+func isCLIUA(ua string) bool {
+	return strings.HasPrefix(strings.ToLower(ua), "curl") ||
+		strings.HasPrefix(strings.ToLower(ua), "wget")
+}
+
+// formatLocationText 将归属地数据格式化为美观的文本输出
+func formatLocationText(ip string, data map[string]interface{}) string {
+	type field struct {
+		key   string
+		value string
+	}
+	var fields []field
+	get := func(k string) string {
+		if v, ok := data[k]; ok && v != nil {
+			if s, ok := v.(string); ok {
+				return strings.TrimSpace(s)
+			}
+			return fmt.Sprintf("%v", v)
+		}
+		return ""
+	}
+
+	// ip-api.com 格式
+	if get("country") != "" || get("region") != "" || get("city") != "" {
+		fields = []field{
+			{"IP", ip},
+			{"国家", get("country")},
+			{"省份", get("region")},
+			{"城市", get("city")},
+			{"运营商", get("isp")},
+			{"组织", get("org")},
+			{"AS 号", get("as")},
+			{"经纬度", strings.TrimSpace(get("latitude") + ", " + get("longitude"))},
+			{"时区", get("timezone")},
+			{"数据来源", get("source")},
+		}
+	} else {
+		// 本地数据库格式（回退），尝试提取主要数据源
+		if b, ok := data["bilibili"].(map[string]interface{}); ok {
+			fields = append(fields, field{"IP", ip},
+				field{"国家", strval(b["country"])},
+				field{"省份", strval(b["administrative_area"])},
+				field{"城市", strval(b["city"])},
+				field{"运营商", strval(b["isp"])},
+				field{"数据来源", "bilibili"})
+		}
+		if q, ok := data["qqwry"].(map[string]interface{}); ok && len(fields) == 0 {
+			fields = append(fields, field{"IP", ip},
+				field{"归属地", strings.TrimSpace(strval(q["country"]) + " " + strval(q["administrative_area"]) + " " + strval(q["city"]))},
+				field{"运营商", strval(q["isp"])},
+				field{"数据来源", "qqwry(纯真)"})
+		}
+		if len(fields) == 0 {
+			// 兜底：输出可读 JSON
+			if b, err := json.MarshalIndent(data, "", "  "); err == nil {
+				return string(b)
+			}
+		}
+	}
+
+	// 计算 key 对齐宽度（中文按 2 个字符宽）
+	maxW := 0
+	for _, f := range fields {
+		if w := displayWidth(f.key); w > maxW {
+			maxW = w
+		}
+	}
+	width := maxW + 2
+
+	var b strings.Builder
+	b.WriteString("IP 归属地查询结果\n")
+	b.WriteString(strings.Repeat("─", 46) + "\n")
+	for _, f := range fields {
+		if f.value == "" || f.value == ", " {
+			continue
+		}
+		b.WriteString(padKey(f.key, width) + ": " + f.value + "\n")
+	}
+	b.WriteString(strings.Repeat("─", 46))
+	return b.String()
+}
+
+// strval 安全取值
+func strval(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return fmt.Sprintf("%v", v)
+}
+
+// displayWidth 计算字符串显示宽度（中文等宽字符按 2）
+func displayWidth(s string) int {
+	w := 0
+	for _, r := range s {
+		if r > 127 {
+			w += 2
+		} else {
+			w++
+		}
+	}
+	return w
+}
+
+// padKey 按显示宽度补空格对齐
+func padKey(s string, width int) string {
+	return s + strings.Repeat(" ", width-displayWidth(s))
+}
+
+// ============ IP 归属地 API 查询（ip-api.com 免费接口，带缓存） ============
+var (
+	ipAPICache   = make(map[string]ipAPICacheEntry)
+	ipAPICacheMu sync.Mutex
+	ipAPISingle  singleflight.Group
+)
+
+type ipAPICacheEntry struct {
+	data      map[string]interface{}
+	expiresAt time.Time
+}
+
+// queryIPLocation 优先查询免费 API（ip-api.com），失败回退本地数据库
+func queryIPLocation(ip string) map[string]interface{} {
+	// 缓存命中直接返回
+	ipAPICacheMu.Lock()
+	if e, ok := ipAPICache[ip]; ok && time.Now().Before(e.expiresAt) {
+		ipAPICacheMu.Unlock()
+		return e.data
+	}
+	ipAPICacheMu.Unlock()
+
+	// singleflight 防止同一 IP 并发重复请求
+	v, _, _ := ipAPISingle.Do(ip, func() (interface{}, error) {
+		data := queryIPAPIRemote(ip)
+		if data != nil {
+			ipAPICacheMu.Lock()
+			ipAPICache[ip] = ipAPICacheEntry{data: data, expiresAt: time.Now().Add(24 * time.Hour)}
+			ipAPICacheMu.Unlock()
+		}
+		return data, nil
+	})
+	if data, ok := v.(map[string]interface{}); ok {
+		return data
+	}
+	return nil
+}
+
+// IP 归属地在线数据源列表（按顺序尝试，第一个成功即返回，全部失败回退本地库）
+var ipAPISources = []ipAPISource{
+	{"ip-api.com", "http://ip-api.com/json/%s?lang=zh-CN", parseIPAPICom},
+	{"ipwho.is", "https://ipwho.is/%s", parseIpwhoIs},
+	{"ip.sb", "https://api.ip.sb/geoip/%s", parseIpSb},
+}
+
+type ipAPISource struct {
+	name  string
+	url   string
+	parse func(ip string, raw map[string]interface{}) map[string]interface{}
+}
+
+// queryIPAPIRemote 依次尝试多个在线数据源
+func queryIPAPIRemote(ip string) map[string]interface{} {
+	for _, src := range ipAPISources {
+		if data := fetchIPSource(src, ip); data != nil {
+			return data
+		}
+	}
+	return nil
+}
+
+func fetchIPSource(src ipAPISource, ip string) map[string]interface{} {
+	// 强制 IPv4 出口（服务器无公网 IPv6，避免 IPv6 优先连接卡死超时）
+	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 30 * time.Second}
+	client := &http.Client{
+		Timeout: 8 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, "tcp4", addr)
+			},
+		},
+	}
+	apiURL := fmt.Sprintf(src.url, ip)
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		slog.Warn("IP source request failed", "source", src.name, "ip", ip, "error", err)
+		return nil
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		slog.Warn("IP source bad status", "source", src.name, "ip", ip, "status", resp.StatusCode)
+		return nil
+	}
+	var raw map[string]interface{}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		slog.Warn("IP source parse failed", "source", src.name, "ip", ip, "error", err)
+		return nil
+	}
+	data := src.parse(ip, raw)
+	if data == nil {
+		slog.Warn("IP source returned no data", "source", src.name, "ip", ip)
+		return nil
+	}
+	return data
+}
+
+// 数据源 1: ip-api.com（中文返回，45次/分钟限制，仅支持 HTTP）
+func parseIPAPICom(ip string, raw map[string]interface{}) map[string]interface{} {
+	if status, _ := raw["status"].(string); status != "success" {
+		return nil
+	}
+	return map[string]interface{}{
+		"ip":           ip,
+		"country":      raw["country"],
+		"country_code": raw["countryCode"],
+		"region":       raw["regionName"],
+		"city":         raw["city"],
+		"isp":          raw["isp"],
+		"org":          raw["org"],
+		"as":           raw["as"],
+		"latitude":     raw["lat"],
+		"longitude":    raw["lon"],
+		"timezone":     raw["timezone"],
+		"source":       "ip-api.com",
+	}
+}
+
+// 数据源 2: ipwho.is（免费无限制，英文返回，ISP 在 connection 嵌套对象）
+func parseIpwhoIs(ip string, raw map[string]interface{}) map[string]interface{} {
+	if ok, _ := raw["success"].(bool); !ok {
+		return nil
+	}
+	conn, _ := raw["connection"].(map[string]interface{})
+	return map[string]interface{}{
+		"ip":           ip,
+		"country":      raw["country"],
+		"country_code": raw["country_code"],
+		"region":       raw["region"],
+		"city":         raw["city"],
+		"isp":          mapGet(conn, "isp"),
+		"org":          mapGet(conn, "org"),
+		"as":           mapGet(conn, "asn"),
+		"latitude":     raw["latitude"],
+		"longitude":    raw["longitude"],
+		"timezone":     raw["timezone"],
+		"source":       "ipwho.is",
+	}
+}
+
+// 数据源 3: api.ip.sb（免费，英文返回）
+func parseIpSb(ip string, raw map[string]interface{}) map[string]interface{} {
+	if raw["country"] == nil {
+		return nil
+	}
+	asn := ""
+	if v, ok := raw["asn"]; ok {
+		asn = fmt.Sprintf("AS%v", v)
+	}
+	return map[string]interface{}{
+		"ip":           ip,
+		"country":      raw["country"],
+		"country_code": raw["country_code"],
+		"region":       raw["region"],
+		"city":         raw["city"],
+		"isp":          raw["isp"],
+		"org":          raw["organization"],
+		"as":           asn,
+		"latitude":     raw["latitude"],
+		"longitude":    raw["longitude"],
+		"timezone":     raw["timezone"],
+		"source":       "ip.sb",
+	}
+}
+
+// mapGet 从嵌套 map 安全取值
+func mapGet(m map[string]interface{}, key string) string {
+	if m == nil {
+		return ""
+	}
+	return strval(m[key])
+}
+
+// ============ IP 信息卡片 / 端口扫描 / Whois (RDAP) ============
+
+// ============ 访问统计模块（基于 nginx access.log 实时解析） ============
+
+var (
+	logStatsMu          sync.Mutex
+	logStatsTotalHits   int64
+	logStatsUniqueIPs   = make(map[string]bool)
+	logStatsPathCounts  = make(map[string]int64)
+	logStatsStatusCount = make(map[string]int64)
+	logStatsRecent      []statsRecentItem
+	logStatsStartTime   = time.Now()
+	logFileOffset       int64
+)
+
+type statsRecentItem struct {
+	Time    string `json:"time"`
+	IP      string `json:"ip"`
+	Method  string `json:"method"`
+	Path    string `json:"path"`
+	Status  int    `json:"status"`
+	UA      string `json:"ua"`
+	Latency int64  `json:"latency_ms"`
+}
+
+// logLineRe 解析 nginx combined 日志行
+var logLineRe = regexp.MustCompile(`^(\S+) - \S+ \[([^\]]+)\] "(\S+) ([^"]*?) HTTP[^"]*" (\d{3}) ([\d-]+) "([^"]*)" "([^"]*)"`)
+
+// parseAccessLog 解析 access.log（支持增量：从 logFileOffset 继续读）
+func parseAccessLog(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	stat, err := f.Stat()
+	if err != nil {
+		return
+	}
+	if stat.Size() < logFileOffset {
+		// 日志轮转过，重置
+		logFileOffset = 0
+	}
+	if _, err := f.Seek(logFileOffset, io.SeekStart); err != nil {
+		return
+	}
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		m := logLineRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		ip, timeStr, method, path, statusStr := m[1], m[2], m[3], m[4], m[5]
+		// 过滤 API/静态资源/探测
+		if strings.HasPrefix(path, "/v1/") || strings.HasPrefix(path, "/_nuxt/") {
+			continue
+		}
+		switch path {
+		case "/favicon.ico", "/favicon.svg", "/ip", "/robots.txt", "/sitemap.xml", "/analytics":
+			continue
+		}
+		status, _ := strconv.Atoi(statusStr)
+
+		logStatsMu.Lock()
+		logStatsTotalHits++
+		logStatsUniqueIPs[ip] = true
+		logStatsPathCounts[path]++
+		logStatsStatusCount[strconv.Itoa(status)]++
+		logStatsRecent = append(logStatsRecent, statsRecentItem{
+			Time:   timeStr,
+			IP:     ip,
+			Method: method,
+			Path:   path,
+			Status: status,
+			UA:     m[8],
+		})
+		if len(logStatsRecent) > 300 {
+			logStatsRecent = logStatsRecent[len(logStatsRecent)-300:]
+		}
+		logStatsMu.Unlock()
+	}
+	logFileOffset, _ = f.Seek(0, io.SeekCurrent)
+}
+
+// initLogStats 启动时全量解析 + 每 10 秒增量
+func initLogStats() {
+	parseAccessLog("/var/log/ipchk-access.log")
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			parseAccessLog("/var/log/ipchk-access.log")
+		}
+	}()
+	slog.Info("Log stats initialized")
+}
+
+// analyticsHandler 返回实时统计 JSON
+func analyticsHandler(c *gin.Context) {
+	logStatsMu.Lock()
+	type pc struct {
+		Path  string `json:"path"`
+		Count int64  `json:"count"`
+	}
+	paths := []pc{}
+	for p, cnt := range logStatsPathCounts {
+		paths = append(paths, pc{p, cnt})
+	}
+	sort.Slice(paths, func(i, j int) bool { return paths[i].Count > paths[j].Count })
+	if len(paths) > 20 {
+		paths = paths[:20]
+	}
+
+	resp := map[string]interface{}{
+		"totalHits": logStatsTotalHits,
+		"uniqueIPs": len(logStatsUniqueIPs),
+		"status":    logStatsStatusCount,
+		"topPaths":  paths,
+		"recent":    logStatsRecent,
+		"startTime": logStatsStartTime.Format("2006-01-02 15:04:05"),
+		"now":       time.Now().Format("2006-01-02 15:04:05"),
+	}
+	logStatsMu.Unlock()
+	c.JSON(http.StatusOK, resp)
+}
+
+// ============ 实时日志查看 ============
+
+// logsHandler 返回 nginx access.log 尾部 N 行（用于实时日志页面）
+func logsHandler(c *gin.Context) {
+	lines := 100
+	if l := c.Query("lines"); l != "" {
+		if n, err := strconv.Atoi(l); err == nil && n > 0 && n <= 2000 {
+			lines = n
+		}
+	}
+	// 支持 ?after= 增量拉取（时间戳毫秒），用于前端轮询去重
+	after := c.Query("after")
+	afterMs, _ := strconv.ParseInt(after, 10, 64)
+
+	logFile := "/var/log/ipchk-access.log"
+	if _, err := os.Stat(logFile); err != nil {
+		logFile = "/usr/local/openresty/nginx/logs/access.log"
+	}
+	rows, err := readTailLines(logFile, lines)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 过滤增量（可选）
+	filtered := rows
+	if afterMs > 0 {
+		filtered = []string{}
+		for _, r := range rows {
+			ts := parseLogTimestamp(r)
+			if ts >= afterMs {
+				filtered = append(filtered, r)
+			}
+		}
+	}
+
+	var lastTs int64
+	if len(rows) > 0 {
+		lastTs = parseLogTimestamp(rows[len(rows)-1])
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"lines":  len(filtered),
+		"lastTs": lastTs,
+		"logs":   filtered,
+	})
+}
+
+// readTailLines 从文件尾部读取 N 行
+func readTailLines(path string, lines int) ([]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	stat, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	size := stat.Size()
+	if size == 0 {
+		return []string{}, nil
+	}
+
+	const chunkSize = 32 * 1024
+	offset := size
+	var remainder []byte
+	var result []string
+
+	for offset > 0 && len(result) < lines {
+		readSize := int64(chunkSize)
+		if readSize > offset {
+			readSize = offset
+		}
+		offset -= readSize
+		buf := make([]byte, readSize)
+		if _, err := f.ReadAt(buf, offset); err != nil && err.Error() != "EOF" {
+			return nil, err
+		}
+		data := append(buf, remainder...)
+		parts := strings.Split(string(data), "\n")
+		remainder = []byte(parts[0])
+		for i := len(parts) - 1; i >= 1 && len(result) < lines; i-- {
+			if s := strings.TrimSpace(parts[i]); s != "" {
+				result = append(result, s)
+			}
+		}
+	}
+	if len(result) < lines && len(remainder) > 0 {
+		if s := strings.TrimSpace(string(remainder)); s != "" {
+			result = append(result, s)
+		}
+	}
+	// 反转（因为是从尾部收集的倒序）
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+	return result, nil
+}
+
+// parseLogTimestamp 解析 nginx combined 日志的时间戳（毫秒）
+// 格式: [04/Aug/2026:06:52:30 +0800]
+func parseLogTimestamp(line string) int64 {
+	idx := strings.Index(line, "[")
+	if idx < 0 {
+		return 0
+	}
+	end := strings.Index(line[idx:], "]")
+	if end < 0 {
+		return 0
+	}
+	timeStr := line[idx+1 : idx+end]
+	// "04/Aug/2026:06:52:30 +0800" → 取 "04/Aug/2026:06:52:30"
+	spaceIdx := strings.Index(timeStr, " ")
+	if spaceIdx > 0 {
+		timeStr = timeStr[:spaceIdx]
+	}
+	t, err := time.Parse("02/Jan/2006:15:04:05", timeStr)
+	if err != nil {
+		return 0
+	}
+	return t.UnixMilli()
+}
+
+// ipCardHandler 生成 IP 信息卡片 SVG（分享图）
+func ipCardHandler(c *gin.Context) {
+	ip := c.Param("ip")
+	if ip == "" {
+		ip = c.ClientIP()
+	}
+	data := queryIPLocation(ip)
+	if data == nil {
+		data = ipdb.SearchIP(ip)
+	}
+	get := func(k string) string { return strings.TrimSpace(strval(data[k])) }
+
+	asn := parseASN(get("as"))
+	countryCode := strings.ToUpper(get("country_code"))
+	org := get("org")
+	fraudScore := calculateFraudScore(ip, asn, countryCode, org)
+	riskLevel := riskLevelOf(fraudScore)
+	riskColor := "#3EAF7C"
+	switch riskLevel {
+	case "轻度风险":
+		riskColor = "#E6A23C"
+	case "中度风险":
+		riskColor = "#E67E22"
+	case "高度风险":
+		riskColor = "#F56C6C"
+	}
+
+	location := strings.TrimSpace(get("country") + " " + get("region") + " " + get("city"))
+	if location == "" {
+		location = "未知位置"
+	}
+
+	svg := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="600" height="320" viewBox="0 0 600 320">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%%" stop-color="#1a2e2a"/>
+      <stop offset="100%%" stop-color="#0d1a17"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%%" stop-color="#3EAF7C"/>
+      <stop offset="100%%" stop-color="#2E9A68"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="320" rx="20" fill="url(#bg)"/>
+  <rect x="0" y="0" width="600" height="6" fill="url(#accent)"/>
+  <text x="30" y="52" font-family="Arial" font-size="22" fill="#3EAF7C" font-weight="bold">ipchk.cn · IP 信息卡片</text>
+  <text x="30" y="110" font-family="Consolas, monospace" font-size="44" fill="#ffffff" font-weight="bold">%s</text>
+  <text x="30" y="150" font-family="Arial" font-size="20" fill="#9ca3af">%s</text>
+  <text x="30" y="190" font-family="Arial" font-size="18" fill="#cfcfcf">ASN: %s</text>
+  <text x="30" y="225" font-family="Arial" font-size="18" fill="#cfcfcf">IP 来源: %s</text>
+  <rect x="30" y="250" width="200" height="8" rx="4" fill="#2a3a35"/>
+  <rect x="30" y="250" width="%d" height="8" rx="4" fill="%s"/>
+  <text x="240" y="272" font-family="Arial" font-size="18" fill="%s" font-weight="bold">%s %d/100</text>
+  <text x="570" y="308" font-family="Arial" font-size="13" fill="#6b7280" text-anchor="end">ipchk.cn</text>
+</svg>`, ip, location, get("as"), ipSourceOf(asn, ip, org), fraudScore*2, riskColor, riskColor, riskLevel, fraudScore)
+
+	c.Header("Content-Type", "image/svg+xml")
+	c.Header("Cache-Control", "public, max-age=300")
+	c.String(http.StatusOK, svg)
+}
+
+// portScanHandler 端口扫描
+func portScanHandler(c *gin.Context) {
+	host := c.Param("ip")
+	if host == "" {
+		host = c.ClientIP()
+	}
+	portsStr := c.Query("ports")
+	var ports []int
+	if portsStr != "" {
+		for _, p := range strings.Split(portsStr, ",") {
+			n, err := strconv.Atoi(strings.TrimSpace(p))
+			if err == nil && n > 0 && n < 65536 {
+				ports = append(ports, n)
+			}
+		}
+	}
+	if len(ports) == 0 {
+		ports = []int{21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 443, 445, 993, 995, 1433, 1521, 3306, 3389, 5432, 6379, 8080, 8443, 8888, 9090, 9200, 27017}
+	}
+
+	type result struct {
+		Port  int    `json:"port"`
+		State string `json:"state"`
+	}
+	results := make([]result, len(ports))
+	var wg sync.WaitGroup
+	for i, port := range ports {
+		wg.Add(1)
+		go func(i, port int) {
+			defer wg.Done()
+			addr := net.JoinHostPort(host, strconv.Itoa(port))
+			conn, err := net.DialTimeout("tcp4", addr, 2*time.Second)
+			if err == nil {
+				conn.Close()
+				results[i] = result{Port: port, State: "open"}
+			} else {
+				results[i] = result{Port: port, State: "closed"}
+			}
+		}(i, port)
+	}
+	wg.Wait()
+
+	open := 0
+	for _, r := range results {
+		if r.State == "open" {
+			open++
+		}
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"host":  host,
+		"total": len(ports),
+		"open":  open,
+		"ports": results,
+	})
+}
+
+// whoisHandler 域名/IP 注册信息查询（域名用 whois 协议，IP 用 RDAP）
+func whoisHandler(c *gin.Context) {
+	target := c.Param("target")
+	if target == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "target required"})
+		return
+	}
+
+	// IP 查询：使用 RDAP（whois 协议对 IP 是各 RIR 分散服务，RDAP 更统一）
+	if net.ParseIP(target) != nil {
+		whoisRDAP(c, target)
+		return
+	}
+
+	// 域名查询：whois 协议（ICANN 要求所有注册局提供，覆盖所有 TLD）
+	rawText, server, err := whoisLookup(target)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"target": target,
+			"error":  "Whois 查询失败：" + err.Error(),
+		})
+		return
+	}
+	fields := extractWhoisFields(rawText)
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"target":    target,
+		"type":      "domain",
+		"server":    server,
+		"registrar": fields["registrar"],
+		"creation":  fields["creation"],
+		"expiry":    fields["expiry"],
+		"ns":        fields["ns"],
+		"status":    fields["status"],
+		"registrant": fields["registrant"],
+		"raw":       rawText,
+	})
+}
+
+// whoisRawQuery 向指定 whois 服务器发起 TCP 43 查询
+func whoisRawQuery(server, query string) (string, error) {
+	conn, err := net.DialTimeout("tcp4", server+":43", 10*time.Second)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(15 * time.Second))
+	if _, err := fmt.Fprintf(conn, "%s\r\n", query); err != nil {
+		return "", err
+	}
+	data, err := io.ReadAll(conn)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// extractWhoisServer 从 IANA whois 响应中提取注册局 whois 服务器
+func extractWhoisServer(text string) string {
+	re := regexp.MustCompile(`(?im)^refer:\s*(\S+)`)
+	if m := re.FindStringSubmatch(text); len(m) > 1 {
+		return strings.TrimSpace(m[1])
+	}
+	return ""
+}
+
+// defaultWhoisServer 各 TLD 默认 whois 服务器兜底
+func defaultWhoisServer(tld string) string {
+	switch strings.ToLower(tld) {
+	case "com", "net":
+		return "whois.verisign-grs.com"
+	case "org":
+		return "whois.pir.org"
+	case "cn":
+		return "whois.cnnic.cn"
+	case "info":
+		return "whois.afilias.net"
+	case "xyz":
+		return "whois.nic.xyz"
+	case "top":
+		return "whois.nic.top"
+	case "cc":
+		return "whois.nic.cc"
+	case "tv":
+		return "whois.nic.tv"
+	case "io":
+		return "whois.nic.io"
+	case "me":
+		return "whois.nic.me"
+	case "co":
+		return "whois.nic.co"
+	case "us":
+		return "whois.nic.us"
+	case "uk":
+		return "whois.nic.uk"
+	case "de":
+		return "whois.denic.de"
+	case "jp":
+		return "whois.jprs.jp"
+	default:
+		return ""
+	}
+}
+
+// whoisLookup 完整 whois 查询：IANA 定位注册局 → 注册局查询
+func whoisLookup(domain string) (string, string, error) {
+	tld := ""
+	if idx := strings.LastIndex(domain, "."); idx >= 0 {
+		tld = strings.ToLower(domain[idx+1:])
+	}
+
+	// 1. 查 IANA 获取注册局 whois 服务器
+	iana, err := whoisRawQuery("whois.iana.org", domain)
+	if err == nil {
+		if server := extractWhoisServer(iana); server != "" {
+			result, err := whoisRawQuery(server, domain)
+			if err == nil {
+				return result, server, nil
+			}
+		}
+	}
+
+	// 2. IANA 失败 → 按 TLD 默认服务器
+	if server := defaultWhoisServer(tld); server != "" {
+		result, err := whoisRawQuery(server, domain)
+		if err == nil {
+			return result, server, nil
+		}
+	}
+
+	// 3. 通用兜底
+	for _, s := range []string{"whois.verisign-grs.com", "whois.pir.org"} {
+		result, err := whoisRawQuery(s, domain)
+		if err == nil {
+			return result, s, nil
+		}
+	}
+
+	if err != nil {
+		return "", "", err
+	}
+	return "", "", fmt.Errorf("无法定位该域名的 whois 服务器")
+}
+
+// extractWhoisFields 从 whois 文本提取关键字段
+func extractWhoisFields(text string) map[string]string {
+	fields := map[string]string{}
+	patterns := map[string]string{
+		"registrar":  `(?im)^\s*(Sponsoring Registrar|Registrar):\s*(.+)$`,
+		"creation":   `(?im)^\s*(Creation Date|Registered on|Created On|Registration Time|Created):\s*(.+)$`,
+		"expiry":     `(?im)^\s*(Registry Expiry Date|Expiry Date|Expiration Time|Expires On|Expiration Date):\s*(.+)$`,
+		"ns":         `(?im)^\s*(Name Server|Nameserver|NS):\s*(.+)$`,
+		"status":     `(?im)^\s*(Domain Status|Status):\s*(.+)$`,
+		"registrant": `(?im)^\s*(Registrant Organization|Registrant Name|Registrant):\s*(.+)$`,
+	}
+	for key, pat := range patterns {
+		re := regexp.MustCompile(pat)
+		if m := re.FindStringSubmatch(text); len(m) > 1 {
+			if key == "ns" || key == "status" {
+				// 多值合并
+				var values []string
+				for _, mm := range re.FindAllStringSubmatch(text, -1) {
+					v := strings.TrimSpace(mm[len(mm)-1])
+					if v != "" && !containsStr(values, v) {
+						values = append(values, v)
+					}
+				}
+				fields[key] = strings.Join(values, ", ")
+			} else {
+				fields[key] = strings.TrimSpace(m[len(m)-1])
+			}
+		}
+	}
+	return fields
+}
+
+func containsStr(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// whoisRDAP IP 查询使用 RDAP
+func whoisRDAP(c *gin.Context, target string) {
+	// IP 查询（whois 协议对 IP 是各 RIR 分散服务，RDAP 更统一）
+	var candidates []string
+	if net.ParseIP(target) != nil {
+		candidates = []string{
+			"https://rdap.org/ip/" + target,
+			"https://rdap.db-ip.com/rdap/ip/" + target,
+		}
+	} else {
+		// 按顶级域选择对应注册局的 RDAP 服务
+		tld := ""
+		if idx := strings.LastIndex(target, "."); idx >= 0 {
+			tld = strings.ToLower(target[idx+1:])
+		}
+		switch tld {
+		case "cn":
+			candidates = []string{
+				"https://rdap.cnnic.cn/domain/" + target,
+				"https://rdap.org/domain/" + target,
+			}
+		case "com":
+			candidates = []string{
+				"https://rdap.verisign.com/com/v1/domain/" + target,
+				"https://rdap.org/domain/" + target,
+			}
+		case "net":
+			candidates = []string{
+				"https://rdap.verisign.com/net/v1/domain/" + target,
+				"https://rdap.org/domain/" + target,
+			}
+		case "org":
+			candidates = []string{
+				"https://rdap.publicinterestregistry.org/rdap/domain/" + target,
+				"https://rdap.org/domain/" + target,
+			}
+		default:
+			candidates = []string{"https://rdap.org/domain/" + target}
+		}
+	}
+
+	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 30 * time.Second}
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, "tcp4", addr)
+			},
+		},
+	}
+
+	var raw map[string]interface{}
+	var body []byte
+	var lastErr string
+	for _, apiURL := range candidates {
+		resp, err := client.Get(apiURL)
+		if err != nil {
+			lastErr = err.Error()
+			continue
+		}
+		body, _ = io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != 200 {
+			lastErr = fmt.Sprintf("HTTP %d", resp.StatusCode)
+			continue
+		}
+		if err := json.Unmarshal(body, &raw); err != nil {
+			lastErr = "响应不是有效 JSON"
+			continue
+		}
+		lastErr = ""
+		break
+	}
+	if len(raw) == 0 {
+		msg := "RDAP 查询失败"
+		if lastErr != "" {
+			msg += "：" + lastErr
+		}
+		msg += "（该域名可能不存在或无 RDAP 记录）"
+		c.JSON(http.StatusOK, gin.H{"target": target, "error": msg})
+		return
+	}
+
+	// 提取关键字段
+	extract := func(keys ...string) string {
+		for _, k := range keys {
+			if v, ok := raw[k]; ok && v != nil {
+				if s, ok := v.(string); ok && s != "" {
+					return s
+				}
+				if f, ok := v.(float64); ok {
+					return strconv.Itoa(int(f))
+				}
+			}
+		}
+		return ""
+	}
+	// 从 entities 提取注册商/组织
+	registrar := ""
+	orgName := ""
+	if entities, ok := raw["entities"].([]interface{}); ok {
+		for _, e := range entities {
+			if em, ok := e.(map[string]interface{}); ok {
+				if name, ok := em["name"].(string); ok && name != "" && orgName == "" {
+					orgName = name
+				}
+				if roles, ok := em["roles"].([]interface{}); ok {
+					for _, r := range roles {
+						if r == "registrar" {
+							if vcard, ok := em["vcardArray"].([]interface{}); ok && len(vcard) > 1 {
+								if arr, ok := vcard[1].([]interface{}); ok {
+									for _, item := range arr {
+										if ia, ok := item.([]interface{}); ok && len(ia) > 3 {
+											if ia[0] == "fn" {
+												registrar = strval(ia[3])
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if registrar == "" {
+		registrar = orgName
+	}
+	// IP 查询兜底：顶层 handle/name 字段（如 "NET-8-8-8-0-1"）
+	if registrar == "" {
+		if h, ok := raw["handle"].(string); ok && h != "" {
+			registrar = h
+		} else if n, ok := raw["name"].(string); ok && n != "" {
+			registrar = n
+		}
+	}
+	// 名称服务器
+	var nameservers []string
+	if ns, ok := raw["nameservers"].([]interface{}); ok {
+		for _, n := range ns {
+			if nm, ok := n.(map[string]interface{}); ok {
+				if ldh, ok := nm["ldhName"].(string); ok {
+					nameservers = append(nameservers, ldh)
+				}
+			}
+		}
+	}
+	// 状态
+	var status []string
+	if st, ok := raw["status"].([]interface{}); ok {
+		for _, s := range st {
+			status = append(status, strval(s))
+		}
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"target":       target,
+		"type":         "domain",
+		"registrar":    registrar,
+		"creationDate": extract("events", "eventAction"),
+		"updatedDate":  extract("updatedDate"),
+		"nameservers":  nameservers,
+		"status":       status,
+		"raw":          string(body),
+	})
+}
+
+func purityHandler(c *gin.Context) {
+	ip := c.Param("ip")
+	if ip == "" {
+		ip = c.ClientIP()
+	}
+	data := queryIPLocation(ip)
+	if data == nil {
+		data = ipdb.SearchIP(ip)
+	}
+
+	get := func(k string) string {
+		if v, ok := data[k]; ok && v != nil {
+			return strings.TrimSpace(strval(v))
+		}
+		return ""
+	}
+
+	// 提取 ASN（"AS15169 Google LLC" → 15169）
+	asn := parseASN(get("as"))
+	countryCode := strings.ToUpper(get("country_code"))
+	country := get("country")
+	region := get("region")
+	city := get("city")
+	isp := get("isp")
+	org := get("org")
+	asOrg := get("as")
+	if asOrg == "" {
+		asOrg = org
+	}
+
+	fraudScore := calculateFraudScore(ip, asn, countryCode, org)
+	cfScore := calculateCloudflareCoefficient(fraudScore, asn, countryCode)
+	ipSource := ipSourceOf(asn, ip, org)
+	properties := ipPropertiesOf(ip, asn, org)
+
+	result := map[string]interface{}{
+		"ip":                    ip,
+		"asn":                   asn,
+		"asOrganization":        asOrg,
+		"country":               country,
+		"countryCode":           countryCode,
+		"region":                region,
+		"city":                  city,
+		"isp":                   isp,
+		"fraudScore":            fraudScore,
+		"ippureCoefficient":     fraudScore,
+		"cloudflareCoefficient": cfScore,
+		"riskLevel":             riskLevelOf(fraudScore),
+		"ipSource":              ipSource,
+		"ipProperties":          properties,
+		"isDataCenter":          isDataCenterIP(asn, ip, org),
+		"isResidential":         isResidentialIP(asn),
+		"isBroadcast":           isBroadcastIP(ip),
+		"userAgent":             c.GetHeader("User-Agent"),
+		"source":                get("source"),
+	}
+	if isCLIUA(c.GetHeader("User-Agent")) {
+		c.String(http.StatusOK, formatPurityText(result))
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+// formatPurityText IP 纯净度 CLI 格式化输出
+func formatPurityText(data map[string]interface{}) string {
+	get := func(k string) string { return strval(data[k]) }
+	var b strings.Builder
+	b.WriteString("IP 纯净度检测结果\n")
+	b.WriteString(strings.Repeat("─", 46) + "\n")
+	rows := [][2]string{
+		{"IP", get("ip")},
+		{"归属地", strings.TrimSpace(get("country") + " " + get("region") + " " + get("city"))},
+		{"ASN", get("asOrganization")},
+		{"IP 来源", get("ipSource")},
+		{"风险评分", get("fraudScore") + " / 100"},
+		{"风险等级", get("riskLevel")},
+		{"CF 系数", get("cloudflareCoefficient")},
+		{"属性", strings.Join(mustStrSlice(data["ipProperties"]), "、")},
+		{"数据中心", boolToStr(data["isDataCenter"])},
+		{"住宅 IP", boolToStr(data["isResidential"])},
+		{"广播地址", boolToStr(data["isBroadcast"])},
+		{"数据来源", get("source")},
+	}
+	maxW := 0
+	for _, r := range rows {
+		if w := displayWidth(r[0]); w > maxW {
+			maxW = w
+		}
+	}
+	for _, r := range rows {
+		if r[1] == "" {
+			continue
+		}
+		b.WriteString(padKey(r[0], maxW+2) + ": " + r[1] + "\n")
+	}
+	b.WriteString(strings.Repeat("─", 46))
+	return b.String()
+}
+
+func mustStrSlice(v interface{}) []string {
+	if s, ok := v.([]string); ok {
+		return s
+	}
+	return nil
+}
+
+func boolToStr(v interface{}) string {
+	if b, ok := v.(bool); ok {
+		if b {
+			return "是"
+		}
+		return "否"
+	}
+	return ""
+}
+
+// parseASN 从 "AS15169 Google LLC" 提取 15169
+func parseASN(as string) int {
+	s := strings.TrimPrefix(as, "AS")
+	num := 0
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			break
+		}
+		num = num*10 + int(r-'0')
+	}
+	return num
+}
+
+// calculateFraudScore IP 纯净度评分（0-100，越高越危险）
+func calculateFraudScore(ip string, asn int, countryCode string, org string) int {
+	score := 0
+
+	// 1. IP 类型和前缀分析（权重35%）
+	if strings.Contains(ip, ":") {
+		score += 8 // IPv6 略高风险
+		if strings.HasPrefix(ip, "2a09:") {
+			score += 15 // Cloudflare 特定 IPv6 前缀
+		}
+		if strings.HasPrefix(ip, "2a06:") {
+			score += 12
+		}
+	} else {
+		highRiskPrefixes := []string{"104.16.", "104.17.", "104.18.", "172.64.", "172.65.", "172.66.", "172.67.", "108.162."}
+		mediumRiskPrefixes := []string{"192.0.", "185.", "193.", "45.", "147."}
+		for _, p := range highRiskPrefixes {
+			if strings.HasPrefix(ip, p) {
+				score += 40
+				break
+			}
+		}
+		if score < 40 {
+			for _, p := range mediumRiskPrefixes {
+				if strings.HasPrefix(ip, p) {
+					score += 20
+					break
+				}
+			}
+		}
+	}
+
+	// 2. ASN 分析（权重35%）
+	highRiskASNs := map[int]bool{
+		13335: true,  // Cloudflare
+		16509: true,  // Amazon AWS
+		14061: true,  // DigitalOcean
+		395747: true, // Vultr
+		20473: true,  // Linode
+		44440: true,  // OVH
+		54113: true,  // Fastly
+		15169: true,  // Google
+		8075:  true,  // Microsoft
+		31898: true,  // Oracle Cloud
+		36492: true,  // Oracle Cloud
+		396982: true, // Google Cloud
+		14618: true,  // Amazon AWS
+		20940: true,  // Akamai
+	}
+	mediumRiskASNs := map[int]bool{
+		32097:  true, // Alibaba
+		45102:  true, // Tencent
+		37963:  true, // Aliyun
+		132203: true, // Tencent Cloud
+		45090:  true, // Tencent Cloud
+		136907: true, // Huawei Cloud
+		63949:  true, // Linode/Akamai
+		2635:   true, // Automattic
+	}
+	if asn != 0 {
+		if highRiskASNs[asn] {
+			score += 35
+		} else if mediumRiskASNs[asn] {
+			score += 18
+		}
+	}
+
+	// 2.5 数据中心 IP 额外加分（ASN 未覆盖时按组织/IP 特征兜底）
+	if score < 35 && isDataCenterIP(asn, ip, org) {
+		score += 25
+	}
+
+	// 3. 地理位置分析（权重20%）
+	switch countryCode {
+	case "CN":
+		score += 10
+	case "US":
+		score += 25
+	case "NL", "DE", "SG":
+		score += 15
+	case "RU", "VN", "IR":
+		score += 20
+	default:
+		score += 12
+	}
+
+	// 4. 本地网络检查（私有地址直接安全）
+	if isPrivateAddr(ip) {
+		return 0
+	}
+
+	// 5. 得分控制
+	if score > 100 {
+		score = 100
+	}
+	if score < 0 {
+		score = 0
+	}
+	return score
+}
+
+// calculateCloudflareCoefficient Cloudflare 系数
+func calculateCloudflareCoefficient(baseScore int, asn int, countryCode string) int {
+	score := float64(baseScore) * 0.75
+	if asn == 13335 {
+		score = float64(baseScore) * 0.95
+		if score > 88 {
+			score = 88
+		}
+	}
+	if countryCode == "CN" {
+		score *= 0.85
+	}
+	if countryCode == "IR" || countryCode == "KP" || countryCode == "CU" {
+		score *= 1.3
+	}
+	if score > 100 {
+		score = 100
+	}
+	if score < 0 {
+		score = 0
+	}
+	return int(score + 0.5)
+}
+
+// riskLevelOf 风险等级
+func riskLevelOf(score int) string {
+	switch {
+	case score <= 25:
+		return "安全"
+	case score <= 50:
+		return "轻度风险"
+	case score <= 70:
+		return "中度风险"
+	default:
+		return "高度风险"
+	}
+}
+
+// isResidentialIP 住宅 IP 判断
+func isResidentialIP(asn int) bool {
+	residentialASNs := map[int]bool{13335: true, 15169: true, 8075: true}
+	return residentialASNs[asn]
+}
+
+// isBroadcastIP 广播 IP 判断
+func isBroadcastIP(ip string) bool {
+	return strings.HasSuffix(ip, ".0") || strings.HasSuffix(ip, ".255")
+}
+
+// isDataCenterIP 数据中心 IP 判断（ASN + 前缀 + 组织名）
+func isDataCenterIP(asn int, ip, org string) bool {
+	dataCenterASNs := map[int]bool{
+		13335: true, 16509: true, 8075: true, 54113: true, 44440: true,
+		14061: true, 395747: true, 20473: true, 31898: true, 36492: true,
+		396982: true, 14618: true, 20940: true, 37963: true, 132203: true,
+		45090: true, 136907: true, 45102: true, 32097: true, 63949: true,
+	}
+	if dataCenterASNs[asn] {
+		return true
+	}
+	if strings.HasPrefix(ip, "104.") || strings.HasPrefix(ip, "172.64.") {
+		return true
+	}
+	// 组织名兜底判断（ip-api 的 org/isp 含典型云厂商关键词）
+	orgLower := strings.ToLower(org)
+	keywords := []string{"cloudflare", "amazon", "aws", "digitalocean", "linode", "ovh", "google cloud", "microsoft", "azure", "alibaba", "tencent", "oracle cloud", "vultr"}
+	for _, k := range keywords {
+		if strings.Contains(orgLower, k) {
+			return true
+		}
+	}
+	return false
+}
+
+// ipSourceOf IP 来源类型
+func ipSourceOf(asn int, ip, org string) string {
+	if ip != "" && (strings.HasPrefix(ip, "192.168.") || strings.HasPrefix(ip, "10.") || strings.HasPrefix(ip, "172.16.")) {
+		return "局域网"
+	}
+	if asn == 13335 {
+		return "Cloudflare 网络"
+	}
+	if asn == 15169 {
+		return "Google 网络"
+	}
+	if asn == 8075 {
+		return "Microsoft Azure"
+	}
+	if asn == 16509 {
+		return "Amazon AWS"
+	}
+	if asn == 54113 {
+		return "Fastly"
+	}
+	if asn == 44440 {
+		return "OVH"
+	}
+	if isDataCenterIP(asn, ip, org) {
+		return "数据中心"
+	}
+	return "住宅/商业网络"
+}
+
+// ipPropertiesOf IP 属性列表
+func ipPropertiesOf(ip string, asn int, org string) []string {
+	var props []string
+	if strings.Contains(ip, ":") {
+		props = append(props, "IPv6")
+	} else {
+		props = append(props, "IPv4")
+	}
+	if isDataCenterIP(asn, ip, org) {
+		props = append(props, "数据中心")
+	} else {
+		props = append(props, "住宅/商业")
+	}
+	if isBroadcastIP(ip) {
+		props = append(props, "广播地址")
+	}
+	return props
+}
+
+// isPrivateAddr 私有地址判断
+func isPrivateAddr(ip string) bool {
+	if strings.HasPrefix(ip, "192.168.") || strings.HasPrefix(ip, "10.") {
+		return true
+	}
+	if strings.HasPrefix(ip, "172.") {
+		parts := strings.Split(ip, ".")
+		if len(parts) >= 2 {
+			if n, err := strconv.Atoi(parts[1]); err == nil && n >= 16 && n <= 31 {
+				return true
+			}
+		}
+	}
+	return ip == "::1" || strings.HasPrefix(ip, "fe80:")
+}
+func clientIPHandler(c *gin.Context) {
+	ip := c.ClientIP()
+	c.String(http.StatusOK, ip+"\n")
 }
 func dnsQueryHandler(c *gin.Context) {
 
@@ -1074,6 +2476,7 @@ func main() {
 	readConfig()
 	webtest.SetDNSServer(DNS_SERVER)
 	initHTTPClients()
+	initLogStats()
 	if IPDB != "false" {
 		ipdb.Init(GH_PROXY)
 	}
@@ -1090,9 +2493,18 @@ func main() {
 	r.GET("/v1/speed/:version/*url", websiteSpeedTestHandler)
 
 	r.GET("/", healchCheck)
+	r.GET("/ip", clientIPHandler)
 	if IPDB != "false" {
 		r.GET("/v1/location/:ip", locateIP)
 		r.GET("/v1/location", locateUserIP)
+		r.GET("/v1/purity/:ip", purityHandler)
+		r.GET("/v1/purity", purityHandler)
+		r.GET("/v1/card/:ip", ipCardHandler)
+		r.GET("/v1/card", ipCardHandler)
+		r.GET("/v1/scan/:ip", portScanHandler)
+		r.GET("/v1/whois/:target", whoisHandler)
+		r.GET("/v1/logs", logsHandler)
+		r.GET("/v1/analytics", analyticsHandler)
 	}
 	if err := r.Run(":" + PORTS); err != nil {
 		slog.Error("Server failed to start", "error", err)

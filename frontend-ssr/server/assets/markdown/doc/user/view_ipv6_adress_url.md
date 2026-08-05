@@ -17,7 +17,7 @@
 
 访问 `http://[2402:4e00:1013:e500:0:9671:f018:4947]` ，会返回本机 IPv6 IP地址。
 
-![](https://static.ipw.wsmdn.top/images/doc/ipv6/user/media/view_ipv6_adress_url.png)
+![](https://static.www.ipchk.cn/images/doc/ipv6/user/media/view_ipv6_adress_url.png)
 
 如果有端口，在 IP 地址后面添加端口，比如
 
@@ -25,11 +25,11 @@
 
 ## Ping IPv6 地址
 
-> [6.wsmdn.dpdns.org](https://6.wsmdn.dpdns.org/) 域名解析的 AAAA 记录就是上面这个 IPv6 IP。
+> [ipchk.cn](https://ipchk.cn/) 域名解析的 AAAA 记录就是上面这个 IPv6 IP。
 
 
 ```
-~$ ping6 6.wsmdn.dpdns.org
+~$ ping6 ipchk.cn
 PING6(56=40+8+8 bytes) 1111:1111:30c0:9556:b807:e464:1111:1111 --> > 2402:4e00:1013:e500:0:9671:f018:4947
 16 bytes from 2402:4e00:1013:e500:0:9671:f018:4947, icmp_seq=0 hlim=52 time=8.748 ms
 16 bytes from 2402:4e00:1013:e500:0:9671:f018:4947, icmp_seq=1 hlim=52 time=8.715 ms
@@ -82,14 +82,14 @@ curl -g http://[2402:4e00:1013:e500:0:9671:f018:4947]/
 >
 > If curl is capable of resolving an address to multiple IP versions (which it is if it is IPv6-capable), this option tells curl to resolve names to IPv6 addresses only.
 
-比如 test.wsmdn.dpdns.org 同时解析到 IPv4 和 IPv6 地址。
+比如 ipchk.cn 同时解析到 IPv4 和 IPv6 地址。
 
 
 ```
-curl -4 test.wsmdn.dpdns.org
+curl -4 ipchk.cn
 106.224.145.147
 
-curl -6 test.wsmdn.dpdns.org
+curl -6 ipchk.cn
 2408:824c:200::2b8b:336f:cc9c
 ```
 

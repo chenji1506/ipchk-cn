@@ -12,7 +12,7 @@
 
 
 ```
-curl 4.wsmdn.dpdns.org
+curl ipchk.cn
 ## 返回示例 106.224.145.147
 ```
 
@@ -21,7 +21,7 @@ curl 4.wsmdn.dpdns.org
 
 
 ```
-curl 6.wsmdn.dpdns.org
+curl ipchk.cn
 ## 返回示例 2408:824c:200::2b8b:336f:cc9c
 ```
 
@@ -32,7 +32,7 @@ curl 6.wsmdn.dpdns.org
 
 
 ```
-curl test.wsmdn.dpdns.org
+curl ipchk.cn
 ## 返回示例1：106.224.145.147
 ## 返回示例2：2408:824c:200::2b8b:336f:cc9c
 ```

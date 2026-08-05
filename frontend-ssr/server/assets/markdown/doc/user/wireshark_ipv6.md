@@ -5,7 +5,7 @@
 
 ## 场景
 
-执行 `curl 6.ipw.cn`，查看本机的 IPv6 通信包。
+执行 `curl 6.ipchk.cn`，查看本机的 IPv6 通信包。
 
 > 如果有 DNS 缓存，可以执行 `sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache` 清理缓存
 
@@ -79,16 +79,16 @@
 
 ## 实战
 
-使用 wireshark 开启抓包，命令访问 \`curl 6.wsmdn.dpdns.org\`，抓包截图如下：
+使用 wireshark 开启抓包，命令访问 \`curl ipchk.cn\`，抓包截图如下：
 
 ![wireshark_ipv6](/doc/wireshark_ipv6.png)
 
 -   DNS 解析（2332-2335）
 
-    -   编号为2332：向 DNS 服务器 \`240e:1f:1::1\` （广东电信 IPv6 DNS）请求 6.wsmdn.dpdns.org 的 A 记录（即IPv4 记录）
-    -   2333： 请求 6.wsmdn.dpdns.org 的 AAAA 记录（即IPv6 记录）
-    -   2334: DNS 服务器返回 6.wsmdn.dpdns.org 的 AAAA 记录为 \`2402:4e00:1013:e500:0:940e:29d7:3443\`
-    -   2335: 返回 6.wsmdn.dpdns.org 的 A 记录为空（实际上 6.wsmdn.dpdns.org 只添加 AAAA 记录，未添加 A 记录）
+    -   编号为2332：向 DNS 服务器 \`240e:1f:1::1\` （广东电信 IPv6 DNS）请求 ipchk.cn 的 A 记录（即IPv4 记录）
+    -   2333： 请求 ipchk.cn 的 AAAA 记录（即IPv6 记录）
+    -   2334: DNS 服务器返回 ipchk.cn 的 AAAA 记录为 \`2402:4e00:1013:e500:0:940e:29d7:3443\`
+    -   2335: 返回 ipchk.cn 的 A 记录为空（实际上 ipchk.cn 只添加 AAAA 记录，未添加 A 记录）
 -   TCP 三次握手（2336-2338）
 
 -   HTTP 传输（2339-2341）

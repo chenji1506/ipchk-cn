@@ -7,7 +7,7 @@ import { extractHost, formatTime, formatSpeed, getStatusCodeClass } from '../../
 const route = useRoute()
 
 useHead({
-  title: 'SSL证书检测工具 | IPv4/IPv6证书检查 | 柠檬味ipw.cn',
+  title: 'SSL证书检测工具 | IPv4/IPv6证书检查 | ipchk.cn',
   meta: [
     { name: 'description', content: '专业的SSL证书检测工具,全面检查网站的IPv4和IPv6 SSL证书状态、有效期、签发机构、HTTP版本等信息,支持HTTPS状态码检测、下载速度测试,帮助网站管理员及时发现证书问题,确保网站安全访问' },
     { name: 'keywords', content: 'ssl证书检测,ssl检查,https证书,ipv6 ssl,ipv4 ssl,证书有效期,ssl状态,https检测,网站安全,证书签发机构' },
@@ -34,7 +34,7 @@ useHead({
         },
         provider: {
           '@type': 'Organization',
-          name: '柠檬味ipw.cn'
+          name: 'ipchk.cn'
         }
       })
     }
@@ -65,7 +65,7 @@ interface SSLCheckItem {
 const apiList = config.apiBaseUrls
 const currentApiIndex = ref(0)
 const remoteAPI = computed(() => apiList[currentApiIndex.value].url)
-const tmpDomain = ref('https://www.zakoflare.com')
+const tmpDomain = ref('https://ipchk.cn')
 const testDomain = ref('')
 const loading = ref(false)
 const error = ref('')
@@ -143,7 +143,7 @@ onMounted(() => {
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：https://zakoflare.com）" 
+        placeholder="请输入域名（如：https://ipchk.cn）" 
       />
       <el-button 
         @click="checkSSL()" 
@@ -322,34 +322,34 @@ onMounted(() => {
       <h3>结论：<el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>网站{{ extractHost(testDomain) }} 证书有效 </h3>
       <p><el-icon><InfoFilled style="color: lightgreen;"/></el-icon>请把下方代码贴到网站底部，把这个好消息告诉你的用户，以便用户核验。</p>
         <img src="/ssl-s1.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s1.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s1.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s2.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s2.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s2.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s3.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s3.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s3.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s4.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s4.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s4.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s5.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s5.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s5.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s6.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s6.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s6.svg"&gt;&lt;/a&gt;</code></pre>
 
     </div>
     <div v-if="result && result.ipv4 && result.ipv4.is_reachable && !result.ipv4.is_expired && result.ipv6 && result.ipv6.is_reachable && result.ipv6.is_expired">
       <h3>结论：<el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>网站{{ extractHost(testDomain) }} 证书有效,但不支持IPv6访问 </h3>
       <p><el-icon><InfoFilled style="color: lightgreen;"/></el-icon>请把下方代码贴到网站底部，把这个好消息告诉你的用户，以便用户核验。</p>
         <img src="/ssl-s1.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s1.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s1.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s2.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s2.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s2.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s3.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s3.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s3.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s4.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s4.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s4.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s5.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s5.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s5.svg"&gt;&lt;/a&gt;</code></pre>
         <img src="/ssl-s6.svg"/>
-        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipw.wsmdn.dpdns.org/ssl-s6.svg"&gt;&lt;/a&gt;</code></pre>
+        <pre><code>&lt;a href="{{ config.siteUrl }}ssl/?site={{ extractHost(testDomain) }}" title="本站支持 SSL 安全访问" target='_blank'&gt;&lt;img style='display:inline-block;vertical-align:middle' alt="本站支持 SSL 安全访问" src="https://ipchk.cn/ssl-s6.svg"&gt;&lt;/a&gt;</code></pre>
 
     </div>
     <div v-else-if="result && result.ipv4 && result.ipv4.is_reachable && result.ipv4.is_expired">

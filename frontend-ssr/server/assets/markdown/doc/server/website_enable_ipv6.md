@@ -82,13 +82,13 @@ Accept-Ranges: bytes
 
 [给域名添加 IPv6 解析记录（AAAA）](/server/ipv6_domain_record.html)![IPv6 解析记录（AAAA)](/doc/ipv6_domain_resolve.png)
 
-添加完后可以通过 [IPv6 在线域名解析工具](https://ipw.wsmdn.top/dns/) 对其解析验证。
+添加完后可以通过 [IPv6 在线域名解析工具](https://www.ipchk.cn/dns/) 对其解析验证。
 
 > 同一个主机名可以同时解析 IPv4（A 记录） 和 IPv6（AAAA 记录)，本地浏览器一般 IPv6 优先访问。
 
 ### 1.6 IPv6 网站开启验证
 
-通过 [网站IPv6开启验证工具](https://ipw.wsmdn.top/ipv6webcheck/) 来验证 IPv6 是否开启成功。
+通过 [网站IPv6开启验证工具](https://www.ipchk.cn/ipv6webcheck/) 来验证 IPv6 是否开启成功。
 
 ## 2\. K8S 如何开启 IPv6
 

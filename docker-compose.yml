@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lemon-ipw:latest
+    container_name: ipw-backend
+    network_mode: host
+    volumes:
+      - ./setting.json:/home/appuser/setting.json:ro
+      - /usr/local/openresty/nginx/logs/access.log:/var/log/ipchk-access.log:ro
+    environment:
+      - GH_PROXY=https://ghproxy.jzzx.vip/
+      - BLOCK_PRIVATE_IPS=true
+      - PORT=8080
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: lemon-ipw-frontend:latest
+    container_name: ipw-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NUXT_PUBLIC_API_BASE=https://ipchk.cn
+    depends_on:
+      - backend
+    restart: unless-stopped

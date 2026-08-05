@@ -1,0 +1,9 @@
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+RUN adduser -D appuser
+USER appuser
+WORKDIR /home/appuser
+COPY --chown=appuser:appuser /tmp/ipw-server ./main
+COPY setting.json ./
+EXPOSE 8080
+CMD ["./main"]

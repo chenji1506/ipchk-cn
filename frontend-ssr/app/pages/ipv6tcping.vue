@@ -7,7 +7,7 @@ import { extractHost } from '../../utils/tools';
 const route = useRoute()
 
 useHead({
-  title: 'IPv6 TCPing测试工具 | IPv6服务器连通性检测 | 柠檬味ipw.cn',
+  title: 'IPv6 TCPing测试工具 | IPv6服务器连通性检测 | ipchk.cn',
   meta: [
     { name: 'description', content: '专业的IPv6 TCPing测试工具,提供多节点IPv6 TCP连通性检测服务,支持自定义端口测试,实时检测IPv6服务器丢包率、平均延迟、最大最小响应时间,助力IPv6网络质量诊断与优化,推进IPv6规模部署和应用' },
     { name: 'keywords', content: 'ipv6 tcping测试,ipv6连通性检测,ipv6服务器延迟,ipv6丢包率,ipv6端口测试,ipv6网络质量,ipv6服务器测试,ipv6网络诊断' },
@@ -34,7 +34,7 @@ useHead({
         },
         provider: {
           '@type': 'Organization',
-          name: '柠檬味ipw.cn'
+          name: 'ipchk.cn'
         }
       })
     }
@@ -70,7 +70,7 @@ interface ServerResult {
   ipv6?: TCPingStats
 }
 
-const tmpDomain = ref('www.zakoflare.com')
+const tmpDomain = ref('https://ipchk.cn')
 const port = ref('80')
 const userIP = ref('')
 const loading = ref(false)
@@ -181,7 +181,7 @@ onMounted(() => {
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：example.com）" 
+        placeholder="请输入域名（如：ipchk.cn）" 
       />
       <el-input 
         v-model="port" 
@@ -248,9 +248,9 @@ onMounted(() => {
         <a href="/doc/user/ipv6_ping" target="_blank">IPv6 Ping 原理介绍</a><br/>
         <strong>注意本页是TCPing，不是ICMPv6 Ping，下列文本仅供参考</strong><br/>
         <strong>1. 本地 IPv6 方式</strong><br/>
-        Windows: ping -6 ipw.wsmdn.top<br/>
+        Windows: ping -6 www.ipchk.cn<br/>
 
-        macOS 或 Linux: ping6 ipw.wsmdn.top<br/>
+        macOS 或 Linux: ping6 www.ipchk.cn<br/>
         <strong>2. 服务器 IPv6 Ping 失败可能原因：</strong><br/>
         服务器已开启 IPv6，但防火墙（又名安全组）未对源地址是 IPv6 地址(::/0)的 ICMPv6协议 开放访问，<br/>
         服务器未开启 IPv6，请参考 服务器开启 IPv6<br/>

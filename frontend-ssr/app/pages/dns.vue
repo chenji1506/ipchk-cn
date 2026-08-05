@@ -8,7 +8,7 @@ import { formatTime } from '../../utils/tools';
 const route = useRoute()
 
 useHead({
-  title: 'DNS查询工具 | 多节点域名解析检测 | 柠檬味ipw.cn',
+  title: 'DNS查询工具 | 多节点域名解析检测 | ipchk.cn',
   meta: [
     { name: 'description', content: '专业的多节点DNS查询工具,支持A记录、AAAA记录、CNAME记录、MX记录、NS记录、TXT记录、SRV记录、CAA记录等多种DNS解析记录查询,提供全国多节点并发检测,快速返回DNS解析结果,助力域名解析问题排查与优化' },
     { name: 'keywords', content: 'dns查询,dns解析,域名解析,a记录查询,aaaa记录,cname记录,mx记录,ns记录,txt记录,srv记录,dns服务器,域名dns检测' },
@@ -35,14 +35,14 @@ useHead({
         },
         provider: {
           '@type': 'Organization',
-          name: '柠檬味ipw.cn'
+          name: 'ipchk.cn'
         }
       })
     }
   ]
 });
 
-const tmpDomain = ref('www.zakoflare.com')
+const tmpDomain = ref('https://ipchk.cn')
 const domain = ref('')
 const recordType = ref('a')
 const loading = ref(false)
@@ -166,7 +166,7 @@ const doc = page.value;
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：example.com）" 
+        placeholder="请输入域名（如：ipchk.cn）" 
       />
       <el-select v-model="recordType" style="width: 150px;" class="custom-height-select">
         <el-option 
@@ -225,23 +225,13 @@ const doc = page.value;
         </table>
     </div>
     <blockquote>
-        <span class="quate">A</span> 将域名指向一个 IPv4 地址，如 <span class="quate">106.55.75.123</span>。 A记录归属地是柠檬超绝大杂烩免费接口，随便用。<br/>
-
-        <span class="quate">AAAA</span> 将域名指向一个 IPv6 地址，如 <span class="quate">2402:4e00:1013:e500:0:9671:f018:4947</span>。同一个主机名可以同时解析到 IPv4(A记录)地址 和 IPv6(AAAA 记录)地址上，当只有IPv4 地址的用户会解析到 IPv4 地址，一般情况下有 IPv6 地址的用户会优先解析到 IPv6 地址。<br/>
-
-       <span class="quate">CNAME</span> 将域名指向另一个域名地址，与其保持相同解析，如 <span class="quate">ipw.wsmdn.top</span> 别名到 <span class="quate">ipw.wsmdn.top.eo.dnse1.com</span>.<br/>
-
-        <span class="quate">MX</span> 用于邮件服务器，一般由邮件注册商提供，如 <span class="quate">mxbiz1.qq.com</span>。如果邮箱格式为 test@<span class="quate">wsmdn.top</span> 则输入 <span class="quate">wsmdn.top</span> 查询。如果邮箱格式为 test@<span class="quate">mail.wsmdn.top</span>则输入<span class="quate">mail.wsmdn.top</span>查询。推荐2个免费的企业邮箱：腾讯企业邮、网易免费企业邮。<br/>
-
-        <span class="quate">TXT</span> 附加文本信息，常用于域名所有权验证，如在申请 HTTPS 证书时需要增加记录、<br/>
-
-        <span class="quate">PTR</span> IP 的反向解析记录，例如 <span class="quate">159.75.190.197</span> 反解析到 <span class="quate">wsmdn.top</span>，一般用于提升自建域名邮件服务器的可信度，可提单找云服务商添加。<br/>
-
-        <span class="quate">NS</span> 域名的 DNS 服务器地址，例如 <span class="quate">ns3.dnsv2.com</span>，推荐 华为云DNS.<br/>
-
-        网站开启IPv6检测 网站开启IPv6检测 | SSL证书在线检查<br/>
-
-        访客IP: {{userIP }}，您的网络 {{ isIPv6(userIP) ? 'IPv6' : 'IPv4'}} 访问优先<br/>
+      <div class="visitor-ip">
+        <span class="vip-label">访客IP</span>
+        <span class="vip-addr">{{ userIP }}</span>
+        <span class="vip-net" :class="isIPv6(userIP) ? 'net-v6' : 'net-v4'">
+          {{ isIPv6(userIP) ? 'IPv6 访问优先' : 'IPv4 访问优先' }}
+        </span>
+      </div>
     </blockquote>
     <div class="markdown">
       <div v-html="doc"></div>
@@ -276,5 +266,78 @@ html.dark {
 
 .el-icon {
   font-size: 1.3em;
+}
+
+/* ===== 访客IP 高亮特效 ===== */
+.visitor-ip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(62, 175, 124, 0.08), rgba(62, 175, 124, 0.02));
+  border: 1px solid rgba(62, 175, 124, 0.22);
+}
+
+.vip-label {
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 12px;
+  border-radius: 6px;
+  color: #fff;
+  background: #3EAF7C;
+  white-space: nowrap;
+}
+
+/* IP 地址：等宽渐变 + 呼吸发光动画 */
+.vip-addr {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, Monaco, monospace;
+  font-size: 1.35em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3EAF7C, #2E9A68);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  word-break: break-all;
+  animation: vip-glow 2.2s ease-in-out infinite;
+}
+
+@keyframes vip-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(62, 175, 124, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(62, 175, 124, 0.75));
+  }
+}
+
+/* 网络类型徽章 */
+.vip-net {
+  font-size: 0.85em;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 20px;
+  color: #fff;
+  white-space: nowrap;
+}
+.net-v4 {
+  background: #3EAF7C;
+}
+.net-v6 {
+  background: #7C4DFF;
+}
+
+/* 暗色模式适配 */
+html.dark .visitor-ip {
+  background: linear-gradient(135deg, rgba(62, 175, 124, 0.14), rgba(62, 175, 124, 0.04));
+  border-color: rgba(62, 175, 124, 0.32);
+}
+
+@media (max-width: 768px) {
+  .vip-addr {
+    font-size: 1.05em;
+  }
 }
 </style>

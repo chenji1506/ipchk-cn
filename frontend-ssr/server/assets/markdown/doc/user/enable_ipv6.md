@@ -13,7 +13,7 @@ IPv6是大势所趋，就在前段时间湖南联通发布公告，对家庭宽�
 
 先给大家看下开启 IPv6 网络访问后的效果。
 
-这是一个 [IPv6 地址查询](https://ipw.wsmdn.top/ipv6) 的网站，可以看到页面提示 您的网络 IPv6 访问优先。 
+这是一个 [IPv6 地址查询](https://www.ipchk.cn/ipv6) 的网站，可以看到页面提示 您的网络 IPv6 访问优先。 
 ![您的网络 IPv6 访问优先](/doc/v6test.png)
 
 如果使用 Google Chrome 浏览器，右键网页开启审查模式，也可以看到网络请求的是 IPv6 地址。 
@@ -77,22 +77,22 @@ IPv6 网络开启成功后，我们需要验证下是否真正开启成功。
 以下几种验证方式，任选其一。
 
 ### 3.1 网页访问验证
-这是一个 [IPv6 地址查询](https://ipw.wsmdn.top/ipv6) 的网站，可以看到上面提示 您的网络 IPv6 访问优先。
+这是一个 [IPv6 地址查询](https://www.ipchk.cn/ipv6) 的网站，可以看到上面提示 您的网络 IPv6 访问优先。
 
-也可以对自己的公网 IPv6 地址进行 [在线 TCPing](https://ipw.wsmdn.top/ipv6tcping)。
+也可以对自己的公网 IPv6 地址进行 [在线 TCPing](https://www.ipchk.cn/ipv6tcping)。
 
 ### 3.2 域名访问验证
-打开 [https://6.wsmdn.dpdns.org/](https://6.wsmdn.dpdns.org/)，如果能访问成功，那么证明 IPv6 网络开启成功。
+打开 [https://ipchk.cn/](https://ipchk.cn/)，如果能访问成功，那么证明 IPv6 网络开启成功。
 >该站点仅支持 IPv6 网络访问，IPv4 网络无法访问。
 
 ```json
-// https://6.ipw.cn/
+// https://6.ipchk.cn/
 240e:3b7:3b7:3b7::3b7
 ```
-打开 [https://test.wsmdn.dpdns.org/](https://test.wsmdn.dpdns.org/)，**如果返回的 IPVersion 字段为 IPv6，则当前网络 IPv6 访问优先，**如果返回的 IPVersion 字段为 IPv4，则当前网络 IPv4 访问优先。
->[test.wsmdn.dpdns.org](https://test.wsmdn.dpdns.org/) 支持 IPv4/IPv6双栈访问。
+打开 [https://ipchk.cn/](https://ipchk.cn/)，**如果返回的 IPVersion 字段为 IPv6，则当前网络 IPv6 访问优先，**如果返回的 IPVersion 字段为 IPv4，则当前网络 IPv4 访问优先。
+>[ipchk.cn](https://ipchk.cn/) 支持 IPv4/IPv6双栈访问。
 ```json
-// https://test.ipw.cn/
+// https://test.ipchk.cn/
 240e:3b7:3b7:3b7::3b7
 ```
 
@@ -145,9 +145,9 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 #### Ping IPv6 网站
 - Windows
 ```sh
-PS C:\Users\Administrator> ping -6 ipw.wsmdn.top
+PS C:\Users\Administrator> ping -6 www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [2606:4700:3037::ac43:88b8] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [2606:4700:3037::ac43:88b8] 具有 32 字节的数据:
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=190ms
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=190ms
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=193ms
@@ -157,9 +157,9 @@ PS C:\Users\Administrator> ping -6 ipw.wsmdn.top
     数据包: 已发送 = 4，已接收 = 4，丢失 = 0 (0% 丢失)，
 往返行程的估计时间(以毫秒为单位):
     最短 = 190ms，最长 = 193ms，平均 = 191ms
-PS C:\Users\Administrator> ping ipw.wsmdn.top
+PS C:\Users\Administrator> ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [2606:4700:3037::ac43:88b8] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [2606:4700:3037::ac43:88b8] 具有 32 字节的数据:
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=190ms
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=195ms
 来自 2606:4700:3037::ac43:88b8 的回复: 时间=189ms
@@ -169,9 +169,9 @@ PS C:\Users\Administrator> ping ipw.wsmdn.top
     数据包: 已发送 = 4，已接收 = 4，丢失 = 0 (0% 丢失)，
 往返行程的估计时间(以毫秒为单位):
     最短 = 189ms，最长 = 195ms，平均 = 191ms
-PS C:\Users\Administrator> ping -4 ipw.wsmdn.top
+PS C:\Users\Administrator> ping -4 www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [172.67.136.184] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [172.67.136.184] 具有 32 字节的数据:
 来自 172.67.136.184 的回复: 字节=32 时间=211ms TTL=52
 来自 172.67.136.184 的回复: 字节=32 时间=212ms TTL=52
 来自 172.67.136.184 的回复: 字节=32 时间=212ms TTL=52
@@ -184,20 +184,20 @@ PS C:\Users\Administrator> ping -4 ipw.wsmdn.top
 ```
 - macOS
 ```sh
-$ ping ipw.wsmdn.top
-PING ipw.wsmdn.top (159.75.190.197): 56 data bytes
+$ ping www.ipchk.cn
+PING www.ipchk.cn (159.75.190.197): 56 data bytes
 64 bytes from 159.75.190.197: icmp_seq=0 ttl=53 time=14.769 ms
 64 bytes from 159.75.190.197: icmp_seq=1 ttl=53 time=10.403 ms
 64 bytes from 159.75.190.197: icmp_seq=2 ttl=53 time=10.125 ms
 64 bytes from 159.75.190.197: icmp_seq=3 ttl=53 time=17.507 ms
 
-$ ping6 ipw.wsmdn.top
+$ ping6 www.ipchk.cn
 PING6(56=40+8+8 bytes)  --> 2402:4e00:40:40::2:331
 16 bytes from 2402:4e00:40:40::2:331, icmp_seq=0 hlim=53 time=18.052 ms
 16 bytes from 2402:4e00:40:40::2:331, icmp_seq=1 hlim=53 time=16.393 ms
 16 bytes from 2402:4e00:40:40::2:331, icmp_seq=2 hlim=53 time=14.736 ms
 16 bytes from 2402:4e00:40:40::2:331, icmp_seq=3 hlim=53 time=14.062 ms
- --- ipw.cn ping6 statistics ---
+ --- ipchk.cn ping6 statistics ---
 4 packets transmitted, 4 packets received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 14.062/15.811/18.052/1.547 ms
 ```

@@ -59,12 +59,12 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 
 
 ``` bash
-$ curl http://6.wsmdn.dpdns.org -v
+$ curl http://ipchk.cn -v
 *   Trying 2402:4e00:1013:e500:0:9671:f018:4947...
 * TCP_NODELAY set
-* Connected to 6.wsmdn.dpdns.org (2402:4e00:1013:e500:0:9671:f018:4947) port 80 (#0)
+* Connected to ipchk.cn (2402:4e00:1013:e500:0:9671:f018:4947) port 80 (#0)
 > GET / HTTP/1.1
-> Host: 6.wsmdn.dpdns.org
+> Host: ipchk.cn
 > User-Agent: curl/7.64.1
 > Accept: */*
 >
@@ -76,7 +76,7 @@ $ curl http://6.wsmdn.dpdns.org -v
 < Connection: keep-alive
 < Access-Control-Allow-Origin: *
 <
-* Connection #0 to host 6.wsmdn.dpdns.org left intact
+* Connection #0 to host ipchk.cn left intact
 2408:824c:200::2b8b:336f:cc9c* Closing connection 0
 ```
 
@@ -93,11 +93,11 @@ server {
         listen [::]:443 ssl http2;
         listen [::]:80;
         #填写绑定证书的域名
-        server_name 6.wsmdn.dpdns.org;
+        server_name ipchk.cn;
         #证书文件名称
-        ssl_certificate ssl/6.wsmdn.dpdns.org_bundle.crt;
+        ssl_certificate ssl/ipchk.cn_bundle.crt;
         #私钥文件名称
-        ssl_certificate_key ssl/6.wsmdn.dpdns.org.key;
+        ssl_certificate_key ssl/ipchk.cn.key;
         ssl_session_timeout 5m;
         #请按照以下协议配置
         ssl_protocols TLSv1.2 TLSv1.3;
@@ -122,10 +122,10 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 
 
 ```
-curl https://6.wsmdn.dpdns.org -v
+curl https://ipchk.cn -v
 *   Trying 2402:4e00:1013:e500:0:9671:f018:4947...
 * TCP_NODELAY set
-* Connected to 6.wsmdn.dpdns.org (2402:4e00:1013:e500:0:9671:f018:4947) port 443 (#0)
+* Connected to ipchk.cn (2402:4e00:1013:e500:0:9671:f018:4947) port 443 (#0)
 * ALPN, offering h2
 * ALPN, offering http/1.1
 * successfully set certificate verify locations:
@@ -144,10 +144,10 @@ curl https://6.wsmdn.dpdns.org -v
 * SSL connection using TLSv1.2 / ECDHE-RSA-AES128-GCM-SHA256
 * ALPN, server accepted to use h2
 * Server certificate:
-*  subject: CN=6.wsmdn.dpdns.org
+*  subject: CN=ipchk.cn
 *  start date: Jun 19 00:00:00 2022 GMT
 *  expire date: Jun 19 23:59:59 2023 GMT
-*  subjectAltName: host "6.wsmdn.dpdns.org" matched cert's "6.wsmdn.dpdns.org"
+*  subjectAltName: host "ipchk.cn" matched cert's "ipchk.cn"
 *  issuer: C=CN; O=TrustAsia Technologies, Inc.; CN=TrustAsia RSA DV TLS CA G2
 *  SSL certificate verify ok.
 * Using HTTP2, server supports multi-use
@@ -155,7 +155,7 @@ curl https://6.wsmdn.dpdns.org -v
 * Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
 * Using Stream ID: 1 (easy handle 0x7f90a8811c00)
 > GET / HTTP/2
-> Host: 6.wsmdn.dpdns.org
+> Host: ipchk.cn
 > User-Agent: curl/7.64.1
 > Accept: */*
 >
@@ -167,7 +167,7 @@ curl https://6.wsmdn.dpdns.org -v
 < content-length: 38
 < access-control-allow-origin: *
 <
-* Connection #0 to host 6.wsmdn.dpdns.org left intact
+* Connection #0 to host ipchk.cn left intact
 2408:824c:200::2b8b:336f:cc9c* Closing connection 0
 ```
 

@@ -1,16 +1,16 @@
 # IPv6 地址标识方法
 
-我们以 IP查询(ipw.wsmdn.top) 的 IPv6 地址为例来介绍三种 IPv6 地址表示方法：首选格式、压缩格式、内嵌 IPv4 地址的 IPv6 地址格式。
+我们以 IP查询(www.ipchk.cn) 的 IPv6 地址为例来介绍三种 IPv6 地址表示方法：首选格式、压缩格式、内嵌 IPv4 地址的 IPv6 地址格式。
 
 
 ```sh
-~$ ping6 ipw.wsmdn.top
+~$ ping6 www.ipchk.cn
 16 bytes from 2402:4e00:40:40::2:3b6, icmp_seq=0 hlim=51 time=16.168 ms
 16 bytes from 2402:4e00:40:40::2:3b6, icmp_seq=1 hlim=51 time=15.788 ms
 16 bytes from 2402:4e00:40:40::2:3b6, icmp_seq=2 hlim=51 time=10.048 ms
 16 bytes from 2402:4e00:40:40::2:3b6, icmp_seq=3 hlim=51 time=16.051 ms
 ^C
---- ipw.wsmdn.top ping6 statistics ---
+--- www.ipchk.cn ping6 statistics ---
 4 packets transmitted, 4 packets received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 10.048/14.514/16.168/2.582 ms
 ```

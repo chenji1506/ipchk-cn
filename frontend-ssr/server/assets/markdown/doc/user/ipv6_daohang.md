@@ -10,17 +10,17 @@ IPv6网络开启成功后，可以访问 IPv6 网站资源，来体验下 IPv6 �
 
 | 名称 | IPv6访问地址 | 最近核验时间 |
 | --- | --- | --- |
-| IPv6 TCPing测试 | ipw.wsmdn.top/ipv6tcping | 2022-3-6 |
+| IPv6 TCPing测试 | www.ipchk.cn/ipv6tcping | 2022-3-6 |
 | IPv6宽带测速网站 | test6.ustc.edu.cn | 2022-3-6 |
 
 ## 网站站长 IPv6 工具
 
 | 名称 | IPv6访问地址 | 最近核验时间 |
 | --- | --- | --- |
-| IPv6 TCPing测试 | ipw.wsmdn.top/ipv6tcping | 2022-3-6 |
-| IPv6网站测速 | ipw.wsmdn.top/ipv6speedtest | 2022-3-6 |
-| IPv6 DNS 解析 | ipw.wsmdn.top/dns | 2022-3-6 |
-| IPv6 网站开启检测 | ipw.wsmdn.top/ipv6webcheck | 2022-3-6 |
+| IPv6 TCPing测试 | www.ipchk.cn/ipv6tcping | 2022-3-6 |
+| IPv6网站测速 | www.ipchk.cn/ipv6speedtest | 2022-3-6 |
+| IPv6 DNS 解析 | www.ipchk.cn/dns | 2022-3-6 |
+| IPv6 网站开启检测 | www.ipchk.cn/ipv6webcheck | 2022-3-6 |
 
 ## 国内 IPv6 发展状态
 

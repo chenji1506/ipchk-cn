@@ -13,3 +13,10 @@ short.txt
 lemon-ipw
 .mmdb.tmp
 *.tmp
+
+# 前端构建产物
+frontend-ssr/node_modules/
+frontend-ssr/.output/
+frontend-ssr/.nuxt/
+ipw-server
+.output/

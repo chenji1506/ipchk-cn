@@ -1,138 +1,77 @@
-
 /*
     前端的一系列配置
 */
 const config = {
-    siteUrl: "https://ipw.wsmdn.top/",
-    // Umami 统计
-    umamiHost: "https://umami.wsmdn.top/",
-    umamiScriptUrl: "https://umami.wsmdn.top/zako.js",
-    umamiWebsiteId: "69a91329-b110-4cf7-a04a-be4360b1a8d3",
-    // 中华人民共和国备案系统
-    ICP: "苏ICP备2026012471号",
-    GongAn: "苏公网安备32132402000813号",
-    // Worker IP查询接口
-    v4OnlyAPI: "https://4.wsmdn.dpdns.org/",
-    v6OnlyAPI: "https://6.wsmdn.dpdns.org/",
-    DualStackAPI: "https://test.wsmdn.dpdns.org/",
+    siteUrl: "https://ipchk.cn/",
+    // Umami 统计（本地部署不启用）
+    umamiHost: "",
+    umamiScriptUrl: "",
+    umamiWebsiteId: "",
+    // 备案信息（本地部署不需要）
+    ICP: "",
+    GongAn: "",
+    // IP查询接口：4.强制IPv4，6.强制IPv6，主域双栈判断优先
+    v4OnlyAPI: "https://4.ipchk.cn/ip",
+    v6OnlyAPI: "https://6.ipchk.cn/ip",
+    DualStackAPI: "https://ipchk.cn/ip",
     apiBaseUrls: [
         {
-            label: "中国 江苏 移动",
-            url: "https://cn-jiangsu.api-ipw.wsmdn.top/"
-        },
-        {
-            label: "中国 广东 深圳 龙岗 坪地街道 中国移动",
-            url: "https://cn-shenzhen.api-ipw.wsmdn.top/"
+            label: "本地服务器",
+            url: "https://ipchk.cn/"
         }
     ],
     IPLocationAPIs: [
         {
-            label: "中国 四川 沙渠 电信",
-            url: "https://cn2-sichuan.api-ipw.wsmdn.top/"
+            label: "本地服务器",
+            url: "https://ipchk.cn/"
         }
     ],
     // 全站是否禁止搜索引擎索引
     noindex: false,
-    TCPing:{
+    TCPing: {
         DualStack: [
             {
-                label: "中国 江苏 移动",
-                url :"https://cn-jiangsu.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 广东 深圳 龙岗 坪地街道 中国移动",
-                url :"https://cn-shenzhen.api-ipw.wsmdn.top/",
-            },
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
+            }
         ],
         IPv4: [
             {
-                label: "中国 广东 广州 腾讯云",
-                url :"https://cn-guangzhou.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "新加坡 腾讯云",
-                url :"https://sg-1.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 陕西 西安 北经济技术开发区 未央区凤城 中国电信",
-                url :"https://cn-xian-shaanxiprovince.api-ipw.wsmdn.top/",
-            },
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
+            }
         ],
         IPv6: [
             {
-                label: "中国 四川 沙渠 电信",
-                url:"https://cn2-sichuan.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 香港 九龙城区 旺角东 Cloudie",
-                url:"https://lntl-cn-hk-kowloon.api-ipw.wsmdn.top/",
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
             }
         ]
     },
-    SpeedTest:{
+    SpeedTest: {
         DualStack: [
             {
-                label: "中国 江苏 移动",
-                url :"https://cn-jiangsu.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 广东 深圳 龙岗 坪地街道 中国移动",
-                url :"https://cn-shenzhen.api-ipw.wsmdn.top/",
-            },
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
+            }
         ],
         IPv4: [
             {
-                label: "中国 广东 广州 腾讯云",
-                url :"https://cn-guangzhou.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "新加坡 腾讯云",
-                url :"https://sg-1.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 陕西 西安 北经济技术开发区 未央区凤城 中国电信",
-                url :"https://cn-xian-shaanxiprovince.api-ipw.wsmdn.top/",
-            },
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
+            }
         ],
         IPv6: [
             {
-                label: "中国 四川 沙渠 电信",
-                url:"https://cn2-sichuan.api-ipw.wsmdn.top/",
-            },
-            {
-                label: "中国 香港 九龙城区 旺角东 Cloudie",
-                url:"https://lntl-cn-hk-kowloon.api-ipw.wsmdn.top/",
+                label: "本地服务器",
+                url: "https://ipchk.cn/"
             }
         ]
     },
-    NSLookup:[
+    NSLookup: [
         {
-            label: "中国 江苏 移动",
-            url :"https://cn-jiangsu.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "中国 广州 腾讯云",
-            url :"https://cn-guangzhou.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "新加坡 腾讯云",
-            url :"https://sg-1.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "中国 四川 沙渠 电信",
-            url:"https://cn2-sichuan.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "中国 陕西 西安 北经济技术开发区 未央区凤城 中国电信",
-            url :"https://cn-xian-shaanxiprovince.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "中国 香港 九龙城区 旺角东 Cloudie",
-            url:"https://lntl-cn-hk-kowloon.api-ipw.wsmdn.top/",
-        },
-        {
-            label: "中国 广东 深圳 龙岗 坪地街道 中国移动",
-            url :"https://cn-shenzhen.api-ipw.wsmdn.top/",
+            label: "本地服务器",
+            url: "https://ipchk.cn/"
         }
     ]
 }

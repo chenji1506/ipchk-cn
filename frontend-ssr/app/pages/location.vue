@@ -10,11 +10,11 @@ const route = useRoute();
 const loading = ref(false);
 
 useHead({
-  title: 'IPv6/IPv4地址查询工具 | IP归属地定位 | 柠檬味ipw.cn',
+  title: 'IPv6/IPv4地址查询工具 | IP归属地定位 | ipchk.cn',
   meta: [
     { name: 'description', content: '专业的IPv6/IPv4地址查询工具,支持IPv4和IPv6地址归属地查询,提供BiliBili Live、GeoCN、IP2Region、Maxmind等多种数据源对比,精确定位IP地理位置、运营商信息,支持中国大陆及境外地址查询,助力IPv6普及与应用' },
     { name: 'keywords', content: 'ipv6地址查询,ipv4地址查询,ip归属地,ip地理位置,ip定位,运营商查询,ipv6归属地,ipv4归属地,maxmind,ip2region,geocn' },
-    { property: 'og:title', content: 'IPv6/IPv4地址归属地查询工具 - 柠檬味ipw.cn' },
+    { property: 'og:title', content: 'IPv6/IPv4地址归属地查询工具 - ipchk.cn' },
     { property: 'og:description', content: '多数据源IP地址归属地查询,支持IPv4和IPv6,提供地理位置、运营商等详细信息' },
     { property: 'og:image', content: config.siteUrl + 'favicon.svg' },
     { property: 'og:type', content: 'website' },
@@ -37,7 +37,7 @@ useHead({
         },
         provider: {
           '@type': 'Organization',
-          name: '柠檬味ipw.cn'
+          name: 'ipchk.cn'
         }
       })
     }
@@ -55,15 +55,11 @@ interface IPLocationType {
 }
 const code = `
 # 请勿用于商业用途，仅供个人测试学习之用，请遵守中国法律法规
-# 查询本机外网 IPv4 地址
-curl ${config.v4OnlyAPI}
+# 查询本机公网 IP（直接 curl 根路径即可）
+curl ${config.siteUrl.replace(/\/$/, '')}
 
-# 查询本机外网 IPv6 地址
-curl ${config.v6OnlyAPI}
-
-# 测试网络是 IPv4 还是 IPv6 访问优先 
-# (访问 IPv4/IPv6 双栈站点，如果返回 IPv6 地址，则 IPv6 访问优先)
-curl ${config.DualStackAPI}
+# 查询指定 IP 的归属地
+curl ${config.siteUrl.replace(/\/$/, '')}/v1/location/8.8.8.8
 `.trim();
 const html = ref('');
 const apiList = config.IPLocationAPIs
@@ -163,11 +159,24 @@ onMounted(async () => {
     </div>
     <div class="location">
       <div class="ip-info" style="height: 40px;">
-        <b>IP</b>&nbsp<p>{{ ipAddress }}</p>
+        <b>IP</b>&nbsp<p class="ip-highlight">{{ ipAddress }}</p>
       </div>
       <div v-if="IPLocation" class="result-section">
           <table class="result-table">
             <tbody>
+              <tr v-if="IPLocation.country || IPLocation.region || IPLocation.city">
+                <td class="table-label">ip-api.com</td>
+                <td class="table-value">
+                  <span>
+                    {{ IPLocation.country }}&nbsp;{{ IPLocation.region }}&nbsp;{{ IPLocation.city }}
+                  </span>
+                </td>
+                <td class="table-value">
+                  <span>
+                    {{ IPLocation.isp }}
+                  </span>
+                </td>
+              </tr>
               <tr v-if="IPLocation.bilibili && (IPLocation.bilibili.administrative_area || IPLocation.bilibili.city)">
                 <td class="table-label">bilibili Live接口</td>
                 <td class="table-value">
@@ -215,12 +224,11 @@ onMounted(async () => {
       <h3 v-else-if="isIPv4(UserIP)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>您的网络IPv4优先</h3>
     </div>
     <blockquote>
-      精度参照表：<br>
-      中国大陆:BiliBili Live > GeoCN > IP2Region > 纯真社区库 > Maxmind GEOLite2 City ≈ DB-IP<br>
-      中国大陆 IPv6 地址: BiliBili Live > GeoCN > IP2Region > Maxmind GEOLite2 City ≈ DB-IP > 纯真社区库<br>
-      境外及港澳台地址: Maxmind GEOLite2 City ≈ DB-IP > BiliBili Live >  > IP2Region > 纯真社区库<br>
-      
-      手机默认开启 IPv6，宽带开启 IPv6 请自行搜索<br>
+      数据来源：<br>
+      归属地数据由 ip-api.com 免费接口提供（数据含国家/省/市/运营商），查询结果缓存 24 小时。<br>
+      当 API 不可用时自动回退本地数据库（ip2region、纯真社区库、DB-IP 等）。<br>
+      <br>
+      手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。<br>
       访客IP: {{UserIP}}，<p v-if="isIPv4(UserIP)">您的网络IPv4优先</p><p v-else-if="isIPv6(UserIP)">您的网络IPv6优先</p>
     </blockquote>
 
@@ -339,6 +347,21 @@ html.dark .result-table .table-value {
   color: #cfcfcf;
   border: 1px solid #1a1919;
 }
+
+/* 查询结果高亮 */
+.ip-highlight {
+  color: #3EAF7C;
+  font-weight: bold;
+  font-size: 1.3em;
+}
+.result-table .table-value span {
+  color: #3EAF7C;
+  font-weight: 600;
+}
+html.dark .result-table .table-value span {
+  color: #4BC98E;
+}
+
 .valid {
   color: #67C23A;
   font-weight: 600;

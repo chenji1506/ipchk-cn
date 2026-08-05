@@ -3,7 +3,7 @@
 >本文的测试结果只作为示例，不代表真实数据！
 
 -   [检查 IPv6 域名解析是否成功](#检查-ipv6-域名解析是否成功)
-    -   [dig -t AAAA ipw.wsmdn.top](#dig-t-aaaa-ipw-cn)
+    -   [dig -t AAAA www.ipchk.cn](#dig-t-aaaa-ipw-cn)
     -   [在线多地域 DNS 解析](#在线多地域-dns-解析)
 -   [IPv6工具箱 小程序 和 iOS App](#ipv6工具箱-小程序-和-ios-app)
     -   [小程序](#小程序)
@@ -20,13 +20,13 @@ IPv6 网站准备好了后，接下来可以为网站域名添加 IPv6 解析记
 
 有 2 种方式解析 IPv6 地址：`dig` 和 `在线解析`。
 
-### dig -t AAAA ipw.wsmdn.top
+### dig -t AAAA www.ipchk.cn
 
 
 ```sh
-$ dig -t AAAA ipw.wsmdn.top
+$ dig -t AAAA www.ipchk.cn
 
-; <<>> DiG 9.10.6 <<>> -t AAAA ipw.wsmdn.top
+; <<>> DiG 9.10.6 <<>> -t AAAA www.ipchk.cn
 ;; global options: +cmd
 ;; Got answer:
 ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 16159
@@ -35,14 +35,14 @@ $ dig -t AAAA ipw.wsmdn.top
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
-;ipw.wsmdn.top.				IN	AAAA
+;www.ipchk.cn.				IN	AAAA
 
 ;; ANSWER SECTION:
-ipw.wsmdn.top.			600	IN	AAAA	2402:4e00:40:40::2:331
+www.ipchk.cn.			600	IN	AAAA	2402:4e00:40:40::2:331
 
 ;; AUTHORITY SECTION:
-ipw.wsmdn.top.			74665	IN	NS	ns4.dnsv2.com.
-ipw.wsmdn.top.			74665	IN	NS	ns3.dnsv2.com.
+www.ipchk.cn.			74665	IN	NS	ns4.dnsv2.com.
+www.ipchk.cn.			74665	IN	NS	ns3.dnsv2.com.
 
 ;; ADDITIONAL SECTION:
 ns3.dnsv2.com.		89916	IN	AAAA	2402:4e00:1430:1102:0:9136:2b2f:bf6b
@@ -69,4 +69,4 @@ ns4.dnsv2.com.		157105	IN	A	183.192.164.118
 
 ### 在线多地域 DNS 解析
 
-通过 [IPv6 在线域名解析工具](https://ipw.wsmdn.top/dns) 对其解析验证。
+通过 [IPv6 在线域名解析工具](https://www.ipchk.cn/dns) 对其解析验证。

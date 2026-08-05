@@ -12,16 +12,16 @@ Windows10/11开启 IPv6 后默认 IPv6 访问优先（以访问 IPv4/IPv6 双栈
     -   [netsh interface ipv6 相关命令如何使用](#netsh-interface-ipv6-相关命令如何使用)
 -   [reference](#reference)
 
-ipw.wsmdn.top 是IPv4/IPv6 双栈站点，使用 ping 命令默认会访问到 IPv6站点，如果特别指定 IPv4（ping -4）才会解析到 IPv4 站点。
+www.ipchk.cn 是IPv4/IPv6 双栈站点，使用 ping 命令默认会访问到 IPv6站点，如果特别指定 IPv4（ping -4）才会解析到 IPv4 站点。
 
 
 ```sh
 Microsoft Windows [版本 10.0.19044.1766]
 (c) Microsoft Corporation。保留所有权利。
 
-C:\Windows\system32>ping ipw.wsmdn.top
+C:\Windows\system32>ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=13ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=18ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=10ms
@@ -32,9 +32,9 @@ C:\Windows\system32>ping ipw.wsmdn.top
 往返行程的估计时间(以毫秒为单位):
     最短 = 10ms，最长 = 18ms，平均 = 14ms
 
-C:\Windows\system32>ping -4 ipw.wsmdn.top
+C:\Windows\system32>ping -4 www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [106.55.75.123] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [106.55.75.123] 具有 32 字节的数据:
 来自 106.55.75.123 的回复: 字节=32 时间=8ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=7ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=9ms TTL=52
@@ -122,9 +122,9 @@ C:\Windows\system32>netsh interface ipv6 show prefixpolicies
 
 
 ```sh
-C:\Windows\system32>ping ipw.wsmdn.top
+C:\Windows\system32>ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [106.55.75.123] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [106.55.75.123] 具有 32 字节的数据:
 来自 106.55.75.123 的回复: 字节=32 时间=14ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=29ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=14ms TTL=52
@@ -135,14 +135,14 @@ C:\Windows\system32>ping ipw.wsmdn.top
 往返行程的估计时间(以毫秒为单位):
     最短 = 14ms，最长 = 29ms，平均 = 17ms
 
-C:\Windows\system32>curl -v  https://ipw.wsmdn.top -I
+C:\Windows\system32>curl -v  https://www.ipchk.cn -I
 *   Trying 106.55.75.123:443...
-* Connected to ipw.wsmdn.top (106.55.75.123) port 443 (#0)
+* Connected to www.ipchk.cn (106.55.75.123) port 443 (#0)
 * schannel: disabled automatic use of client certificate
 * schannel: ALPN, offering http/1.1
 * schannel: ALPN, server accepted to use http/1.1
 > HEAD / HTTP/1.1
-> Host: ipw.wsmdn.top
+> Host: www.ipchk.cn
 > User-Agent: curl/7.79.1
 > Accept: */*
 ```
@@ -155,9 +155,9 @@ C:\Windows\system32>curl -v  https://ipw.wsmdn.top -I
 Microsoft Windows [版本 10.0.19044.1766]
 (c) Microsoft Corporation。保留所有权利。
 
-C:\Windows\system32>ping ipw.wsmdn.top
+C:\Windows\system32>ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=10ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=14ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=9ms
@@ -192,9 +192,9 @@ C:\Windows\system32>netsh interface ipv6 show prefixpolicies
        100      4  ::ffff:0:0/96
         40      1  ::/0
 
-C:\Windows\system32>ping ipw.wsmdn.top
+C:\Windows\system32>ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [106.55.75.123] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [106.55.75.123] 具有 32 字节的数据:
 来自 106.55.75.123 的回复: 字节=32 时间=14ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=44ms TTL=52
 来自 106.55.75.123 的回复: 字节=32 时间=14ms TTL=52
@@ -257,7 +257,7 @@ C:\Windows\system32>shutdown -r -t 0
 ```
 
 
-电脑重启后，\`ping ipw.wsmdn.top\` 会解析 IPv6 地址，重置成功。
+电脑重启后，\`ping www.ipchk.cn\` 会解析 IPv6 地址，重置成功。
 
 #### 调整网络前缀优先级
 
@@ -287,9 +287,9 @@ C:\Windows\system32>netsh interface ipv6 show prefixpolicies
         10      4  ::ffff:0:0/96
 
 
-C:\Windows\system32>ping ipw.wsmdn.top
+C:\Windows\system32>ping www.ipchk.cn
 
-正在 Ping ipw.wsmdn.top [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
+正在 Ping www.ipchk.cn [2402:4e00:40:40::2:3b6] 具有 32 字节的数据:
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=10ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=11ms
 来自 2402:4e00:40:40::2:3b6 的回复: 时间=18ms

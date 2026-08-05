@@ -1,8 +1,8 @@
 {
     "port": 8080,
-    "gh-proxy": "",
+    "gh-proxy": "https://ghproxy.jzzx.vip/",
     "single-stack": "",
-    "dns-server": "",
+    "dns-server": "119.28.28.28:53",
     "block-private-ips": true,
     "ipdb": true
 }

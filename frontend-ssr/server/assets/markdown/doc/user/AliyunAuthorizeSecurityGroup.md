@@ -59,10 +59,10 @@ from aliyunsdkcore.acs_exception.exceptions import ClientException
 from aliyunsdkcore.acs_exception.exceptions import ServerException
 from aliyunsdkecs.request.v20140526.AuthorizeSecurityGroupRequest import AuthorizeSecurityGroupRequest
 
-# 获取IPv4地址：https://4.wsmdn.dpdns.org
-# 获取IPv6地址：https://6.wsmdn.dpdns.org
-# 确认用户网络是IPv4还是IPv6访问优先：https://test.wsmdn.dpdns.org/api/ip/myip?json
-r = requests.get('https://4.wsmdn.dpdns.org')
+# 获取IPv4地址：https://ipchk.cn
+# 获取IPv6地址：https://ipchk.cn
+# 确认用户网络是IPv4还是IPv6访问优先：https://ipchk.cn/api/ip/myip?json
+r = requests.get('https://ipchk.cn')
 clientIP = r.text
 
 # <accessKeyId>, <accessSecret>: 前往 https://ram.console.aliyun.com/manage/ak 添加 accessKey
@@ -127,7 +127,7 @@ import (
 
 func main() {
 
-	responseClient, errClient := http.Get("https://4.wsmdn.dpdns.org/") // 获取外网 IP
+	responseClient, errClient := http.Get("https://ipchk.cn/") // 获取外网 IP
 	if errClient != nil {
 		fmt.Printf("获取外网 IP 失败，请检查网络\n")
 		panic(errClient)

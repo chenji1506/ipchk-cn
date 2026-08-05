@@ -57,6 +57,9 @@
   border-collapse: collapse;
   background: #fff;
   border: 1px solid #dcdfe6;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(62, 175, 124, 0.05);
 }
 
 html.dark .result-table {
@@ -66,31 +69,42 @@ html.dark .result-table {
 
 .result-table thead tr {
   background-color: #c0c4cc;
+  background: linear-gradient(135deg, rgba(62, 175, 124, 0.85), rgba(62, 175, 124, 0.65));
 }
 
 html.dark .result-table thead tr {
-  background: #2e2d2d;
+  background: linear-gradient(135deg, rgba(62, 175, 124, 0.55), rgba(62, 175, 124, 0.4));
 }
 
 .result-table .table-header {
   padding: 12px 15px;
-  font-weight: 600;
-  color: #303133;
+  font-weight: 700;
+  color: #fff;
   text-align: left;
-  border: 1px solid #dcdfe6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 html.dark .result-table .table-header {
-  color: #cfcfcf;
-  border: 1px solid #1a1919;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .result-table tbody tr {
   border-bottom: 1px solid #dcdfe6;
+  transition: background-color 0.2s ease;
 }
 
 html.dark .result-table tbody tr {
   border-bottom: 1px solid #1a1919;
+}
+
+/* 斑马纹 */
+.result-table tbody tr:nth-child(even) {
+  background: rgba(62, 175, 124, 0.03);
+}
+
+html.dark .result-table tbody tr:nth-child(even) {
+  background: rgba(62, 175, 124, 0.06);
 }
 
 .result-table tbody tr:last-child {
@@ -98,11 +112,11 @@ html.dark .result-table tbody tr {
 }
 
 .result-table tbody tr:hover {
-  background-color: #f5f7fa;
+  background-color: rgba(62, 175, 124, 0.08);
 }
 
 html.dark .result-table tbody tr:hover {
-  background-color: #393a3a;
+  background-color: rgba(62, 175, 124, 0.12);
 }
 
 .result-table .table-label {

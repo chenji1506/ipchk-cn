@@ -14,7 +14,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   modules: [
-    "nitro-cloudflare-dev",
     '@element-plus/nuxt',
     '@nuxtjs/sitemap',
     '@nuxtjs/robots',
@@ -34,7 +33,7 @@ export default defineNuxtConfig({
   },
   site: { 
   url: config.siteUrl, 
-  name: 'Lemon IPW' 
+  name: 'ipchk.cn' 
   },
   css: [
     // 1. 引入 Element Plus 基础样式 (如果你还没有引入的话)
@@ -73,7 +72,7 @@ export default defineNuxtConfig({
     },
   },
 nitro: {
-  preset: 'cloudflare-module',
+  preset: 'node-server',
     publicAssets: [
       {
         dir: 'public',
@@ -82,13 +81,14 @@ nitro: {
     ],
     esbuild: {
       options: {
-        target: 'es2022' // 明确告诉 Nitro 使用 es2022 进行打包
+        target: 'es2022'
       }
     }
   },
   security: {
     headers: {
       contentSecurityPolicy: {
+        'upgrade-insecure-requests': false,
 
         'script-src': [
           "'self'",

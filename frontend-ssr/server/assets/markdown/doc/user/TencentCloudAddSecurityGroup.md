@@ -68,9 +68,9 @@ func main() {
 
 	request := vpc.NewModifyAddressTemplateAttributeRequest()
 
-    // 获取IPv4地址：https://4.wsmdn.dpdns.org
-	// 获取IPv6地址：https://6.wsmdn.dpdns.org
-	responseClient, errClient := http.Get("https://4.wsmdn.dpdns.org") // 获取外网 IP
+    // 获取IPv4地址：https://ipchk.cn
+	// 获取IPv6地址：https://ipchk.cn
+	responseClient, errClient := http.Get("https://ipchk.cn") // 获取外网 IP
 	if errClient != nil {
 		fmt.Printf("获取外网 IP 失败，请检查网络\n")
 		panic(errClient)

@@ -4,32 +4,32 @@ DNS 一般分为 **本地DNS**（一般由电信运营商提供）和 **权威DN
 
 ## 本地 DNS
 
-本地 DNS 采用递归查询域名解析记录，比如指定阿里 DNS（`223.5.5.5`）来解析 `ipw.wsmdn.top`，在 `ANSWER SECTION` 中可以看到直接返回了 `ipw.wsmdn.top` 的解析记录。
+本地 DNS 采用递归查询域名解析记录，比如指定阿里 DNS（`223.5.5.5`）来解析 `www.ipchk.cn`，在 `ANSWER SECTION` 中可以看到直接返回了 `www.ipchk.cn` 的解析记录。
 
 本地 DNS 本身不会记录域名解析记录，而是把请求转发到权威 DNS，逐级递归查询，再把解析记录返回给客户端。当然它会缓存解析记录（解析记录中 `TTL` 属性控制缓存的时长）。
 
 本地 DNS 解析示例：
 
 ```bash
-~$ dig @223.5.5.5 ipw.wsmdn.top
+~$ dig @223.5.5.5 www.ipchk.cn
 ;; QUESTION SECTION:
-;ipw.wsmdn.top.			IN	A
+;www.ipchk.cn.			IN	A
 
 ;; ANSWER SECTION:
-ipw.wsmdn.top.		1	IN	CNAME	ipw.wsmdn.top.a1.initac.com.
-ipw.wsmdn.top.a1.initac.com. 76	IN	A	183.205.0.66
-ipw.wsmdn.top.a1.initac.com. 76	IN	A	183.205.0.67
-ipw.wsmdn.top.a1.initac.com. 76	IN	A	183.205.0.65
-ipw.wsmdn.top.a1.initac.com. 76	IN	A	183.205.0.64
+www.ipchk.cn.		1	IN	CNAME	www.ipchk.cn.a1.initac.com.
+www.ipchk.cn.a1.initac.com. 76	IN	A	183.205.0.66
+www.ipchk.cn.a1.initac.com. 76	IN	A	183.205.0.67
+www.ipchk.cn.a1.initac.com. 76	IN	A	183.205.0.65
+www.ipchk.cn.a1.initac.com. 76	IN	A	183.205.0.64
 ```
 
 ## 权威 DNS
 
-以查询 `ipw.wsmdn.top` 为例，了解下这 3 级 DNS 的作用。
+以查询 `www.ipchk.cn` 为例，了解下这 3 级 DNS 的作用。
 
-- **根 DNS**：比如 `a.root-servers.net.`，负责返回待查询域名（`ipw.wsmdn.top`）所属顶级 DNS（如 `e.zdnscloud.cn.`）的解析记录 `203.119.82.1`；
+- **根 DNS**：比如 `a.root-servers.net.`，负责返回待查询域名（`www.ipchk.cn`）所属顶级 DNS（如 `e.zdnscloud.cn.`）的解析记录 `203.119.82.1`；
 - **顶级 DNS**：比如 `e.zdnscloud.cn.`，负责返回待查询域名的 DNS 地址（如 `brodie.ns.cloudflare.com.`）的解析记录；
-- **一级 DNS**：比如 `ns1.huaweicloud-dns.com.`，负责返回具体域名的解析记录，比如 `ipw.wsmdn.top` 的 CNAME 记录为 `ipw.wsmdn.top.a1.initac.com.`。
+- **一级 DNS**：比如 `ns1.huaweicloud-dns.com.`，负责返回具体域名的解析记录，比如 `www.ipchk.cn` 的 CNAME 记录为 `www.ipchk.cn.a1.initac.com.`。
 
 以下为查询示例：
 
@@ -75,15 +75,15 @@ h.root-servers.net.	569462	IN	AAAA	2001:500:1::53
 c.root-servers.net.	34585	IN	AAAA	2001:500:2::c
 ```
 
-通过根 DNS 查询 `wsmdn.top`，返回了顶级 DNS `e.zdnscloud.cn.` 的地址为 `203.119.82.1`：
+通过根 DNS 查询 `ipchk.cn`，返回了顶级 DNS `e.zdnscloud.cn.` 的地址为 `203.119.82.1`：
 
 ```bash
-~$ dig @198.41.0.4 wsmdn.top
+~$ dig @198.41.0.4 ipchk.cn
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
-;wsmdn.top.			IN	A
+;ipchk.cn.			IN	A
 
 ;; AUTHORITY SECTION:
 top.			172800	IN	NS	e.zdnscloud.cn.
@@ -106,29 +106,29 @@ i.zdnscloud.cn.		172800	IN	AAAA	2401:8d00:1::1
 b.zdnscloud.cn.		172800	IN	A	203.99.25.1
 ```
 
-通过 `e.zdnscloud.cn` 查询 `wsmdn.top`，返回一级 DNS 的 NS 记录：
+通过 `e.zdnscloud.cn` 查询 `ipchk.cn`，返回一级 DNS 的 NS 记录：
 
 ```bash
-~$ dig @e.zdnscloud.cn wsmdn.top
+~$ dig @e.zdnscloud.cn ipchk.cn
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
-;wsmdn.top.			IN	A
+;ipchk.cn.			IN	A
 
 ;; AUTHORITY SECTION:
-wsmdn.top.		3600	IN	NS	brodie.ns.cloudflare.com.
-wsmdn.top.		3600	IN	NS	gloria.ns.cloudflare.com.
+ipchk.cn.		3600	IN	NS	brodie.ns.cloudflare.com.
+ipchk.cn.		3600	IN	NS	gloria.ns.cloudflare.com.
 ```
 
-通过 `ns1.huaweicloud-dns.com` 返回 `ipw.wsmdn.top` 的 CNAME 记录：
+通过 `ns1.huaweicloud-dns.com` 返回 `www.ipchk.cn` 的 CNAME 记录：
 
 ```bash
-~$ dig @ns1.huaweicloud-dns.com ipw.wsmdn.top
+~$ dig @ns1.huaweicloud-dns.com www.ipchk.cn
 
 ;; QUESTION SECTION:
-;ipw.wsmdn.top.			IN	A
+;www.ipchk.cn.			IN	A
 
 ;; ANSWER SECTION:
-ipw.wsmdn.top.		300	IN	CNAME	ipw.wsmdn.top.a1.initac.com.
+www.ipchk.cn.		300	IN	CNAME	www.ipchk.cn.a1.initac.com.
 ```

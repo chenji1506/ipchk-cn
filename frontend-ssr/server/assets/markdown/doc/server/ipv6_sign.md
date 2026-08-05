@@ -6,7 +6,7 @@ HTML+CSS 代码，可以提醒访客本网站支持 IPv6 访问，同时可以�
 
 
 ```html
-本站支持<span id="ipv6"><a href='https://ipw.wsmdn.top/ipv6webcheck/' target='_blank'>IPv6</a></span> 访问
+本站支持<span id="ipv6"><a href='https://www.ipchk.cn/ipv6webcheck/' target='_blank'>IPv6</a></span> 访问
 ```
 
 
@@ -27,7 +27,7 @@ HTML+CSS 代码，可以提醒访客本网站支持 IPv6 访问，同时可以�
 
 ## 效果
 
-本站支持[IPv6](https://ipw.wsmdn.top/ipv6webcheck/) 访问
+本站支持[IPv6](https://www.ipchk.cn/ipv6webcheck/) 访问
 
 ### 跳转检查页面
 
