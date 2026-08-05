@@ -216,7 +216,7 @@ useHead({
       Copyright © ipchk.cn 2026  | <img src="/ipv6-s1.svg" alt="IPv6 相关标识"/> | <img src="/ssl-s1.svg" alt="SSL 相关标识"/> | All right reserved
     </div>
     <div class="one-line">
-      本站基于 <a href="https://github.com/nomdn/ipw-cn" target="_blank" rel="noreferrer">nomdn/ipw-cn</a>（GPL-3.0 开源协议）构建，修改后的源码已开源：<a href="https://github.com/chenji1506/ipchk-cn" target="_blank" rel="noreferrer">github.com/chenji1506/ipchk-cn</a>
+      本站源码已开源（GPL-3.0）：<a href="https://github.com/chenji1506/ipchk-cn" target="_blank" rel="noreferrer">github.com/chenji1506/ipchk-cn</a>
     </div>
     <div class="one-line">
       <a v-if="config.ICP" href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" >{{ config.ICP }}</a>
