@@ -207,8 +207,8 @@ onMounted(async () => {
       </div>
     </div>
     <div style="font-size: 1.5em;">
-      <h3 v-if="ipAddress && isIPv6(ipAddress)"><el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>您的网络IPv6优先</h3>
-      <h3 v-else-if="ipAddress && isIPv4(ipAddress)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>您的网络IPv4优先</h3>
+      <h3 v-if="yourIPv6 && isIPv6(yourIPv6)"><el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>您的网络IPv6优先</h3>
+      <h3 v-else-if="yourIPv4 && isIPv4(yourIPv4)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>您的网络IPv4优先</h3>
       <h3 v-else><el-icon><CircleCloseFilled /></el-icon>查询中，请稍后</h3>
     </div>
      <blockquote>
