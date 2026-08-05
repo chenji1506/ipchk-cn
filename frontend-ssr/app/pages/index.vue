@@ -151,13 +151,13 @@ onMounted(async () => {
   ]);
 
   if (dualStack.status === 'fulfilled') {
-    ipAddress.value = dualStack.value;
+    ipAddress.value = dualStack.value.trim();
   }
   if (ipV4.status === 'fulfilled' && isIPv4(ipV4.value.trim())) {
-    yourIPv4.value = ipV4.value;
+    yourIPv4.value = ipV4.value.trim();
   }
   if (ipV6.status === 'fulfilled' && isIPv6(ipV6.value.trim())) {
-    yourIPv6.value = ipV6.value;
+    yourIPv6.value = ipV6.value.trim();
   }
   // 兜底：API 探测不到 IPv6 时，用 WebRTC 读本机网卡 IPv6
   if (!yourIPv6.value) {
