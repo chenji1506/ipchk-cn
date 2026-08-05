@@ -10,7 +10,6 @@ services:
       - ./setting.json:/home/appuser/setting.json:ro
       - /usr/local/openresty/nginx/logs/access.log:/var/log/ipchk-access.log:ro
     environment:
-      - GH_PROXY=https://ghproxy.jzzx.vip/
       - BLOCK_PRIVATE_IPS=true
       - PORT=8080
     restart: unless-stopped
