@@ -36,16 +36,8 @@ const config = {
             }
         ],
         IPv4: [
-            {
-                label: "本地服务器",
-                url: "https://ipchk.cn/"
-            }
         ],
         IPv6: [
-            {
-                label: "本地服务器",
-                url: "https://ipchk.cn/"
-            }
         ]
     },
     SpeedTest: {
@@ -56,16 +48,8 @@ const config = {
             }
         ],
         IPv4: [
-            {
-                label: "本地服务器",
-                url: "https://ipchk.cn/"
-            }
         ],
         IPv6: [
-            {
-                label: "本地服务器",
-                url: "https://ipchk.cn/"
-            }
         ]
     },
     NSLookup: [
