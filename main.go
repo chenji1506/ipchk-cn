@@ -806,34 +806,36 @@ func sslCheckHandler(c *gin.Context) {
 func locateIP(c *gin.Context) {
 	ip := c.Param("ip")
 	slog.Debug("Locating IP", "ip", ip)
-	var data map[string]interface{}
-	if d := queryIPLocation(ip); d != nil {
-		data = d
-	} else {
-		data = ipdb.SearchIP(ip)
-	}
-	// 命令行访问（curl/wget）→ 格式化美观输出
-	if isCLIUA(c.GetHeader("User-Agent")) {
-		c.String(http.StatusOK, formatLocationText(ip, data))
-		return
-	}
-	c.JSON(http.StatusOK, data)
+	c.JSON(http.StatusOK, mergeLocationSources(ip))
 }
 func locateUserIP(c *gin.Context) {
 	ip := c.ClientIP()
 	// 可能会有误报，因为某些环境下 ClientIP() 可能返回代理服务器的 IP 地址，而不是用户的真实 IP 地址
 	slog.Debug("Locating user IP", "ip", ip)
-	var data map[string]interface{}
-	if d := queryIPLocation(ip); d != nil {
-		data = d
-	} else {
-		data = ipdb.SearchIP(ip)
-	}
 	if isCLIUA(c.GetHeader("User-Agent")) {
-		c.String(http.StatusOK, formatLocationText(ip, data))
+		c.String(http.StatusOK, formatLocationText(ip, mergeLocationSources(ip)))
 		return
 	}
-	c.JSON(http.StatusOK, data)
+	c.JSON(http.StatusOK, mergeLocationSources(ip))
+}
+
+// mergeLocationSources 合并多数据源：ip-api.com（主）+ 本地库（bilibili/ip2region/qqwry/maxmind/dbip/geocn）
+func mergeLocationSources(ip string) map[string]interface{} {
+	result := map[string]interface{}{"ip": ip}
+	// 主源：ip-api.com（在线，中文）
+	if data := queryIPLocation(ip); data != nil {
+		for k, v := range data {
+			result[k] = v
+		}
+	}
+	// 合并本地多源（不覆盖主源已有字段）
+	multi := ipdb.SearchIP(ip)
+	for k, v := range multi {
+		if _, exists := result[k]; !exists {
+			result[k] = v
+		}
+	}
+	return result
 }
 
 // isCLIUA 判断是否为 curl/wget 等命令行客户端

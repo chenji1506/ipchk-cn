@@ -7,7 +7,7 @@ services:
     container_name: ipw-backend
     network_mode: host
     volumes:
-      - ./setting.json:/home/appuser/setting.json:ro
+      - ./ipdb-files:/home/appuser
       - /usr/local/openresty/nginx/logs/access.log:/var/log/ipchk-access.log:ro
     environment:
       - BLOCK_PRIVATE_IPS=true
