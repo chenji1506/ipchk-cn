@@ -1,8 +1,0 @@
-{
-    "port": 8080,
-    "gh-proxy": "",
-    "single-stack": "",
-    "dns-server": "119.28.28.28:53",
-    "block-private-ips": true,
-    "ipdb": true
-}

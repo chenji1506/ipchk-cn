@@ -20,3 +20,4 @@ frontend-ssr/.output/
 frontend-ssr/.nuxt/
 ipw-server
 .output/
+ipdb-files/
