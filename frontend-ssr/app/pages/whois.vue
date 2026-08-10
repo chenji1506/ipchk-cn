@@ -48,34 +48,77 @@ async function query() {
 
     <div v-if="result && !result.error" class="result-section">
       <table class="result-table">
-        <tbody>
+                <tbody>
           <tr>
             <td class="table-label">目标</td>
-            <td class="table-value"><span class="ip-highlight">{{ result.target }}</span></td>
+            <td class="table-value"><span class="ip-highlight">{{ result.domain || result.target }}</span></td>
           </tr>
           <tr>
             <td class="table-label">注册商</td>
-            <td class="table-value"><span>{{ result.registrar || '--' }}</span></td>
+            <td class="table-value">
+              <span v-if="result.registrar?.name">{{ result.registrar.name }} <span v-if="result.registrar.ianaId" class="sub-info">(IANA ID: {{ result.registrar.ianaId }})</span></span>
+              <span v-else>{{ result.registrar || -- }}</span>
+            </td>
           </tr>
           <tr>
             <td class="table-label">注册时间</td>
-            <td class="table-value"><span>{{ result.creation || '--' }}</span></td>
+            <td class="table-value">
+              <span v-if="result.dates?.registration">{{ result.dates.registration }}</span>
+              <span v-else>{{ result.creation || -- }}</span>
+            </td>
           </tr>
           <tr>
             <td class="table-label">过期时间</td>
-            <td class="table-value"><span>{{ result.expiry || '--' }}</span></td>
+            <td class="table-value">
+              <span v-if="result.dates?.expiration">{{ result.dates.expiration }}</span>
+              <span v-else>{{ result.expiry || -- }}</span>
+            </td>
           </tr>
           <tr>
-            <td class="table-label">注册者</td>
-            <td class="table-value"><span>{{ result.registrant || '--' }}</span></td>
+            <td class="table-label">最后变更</td>
+            <td class="table-value"><span>{{ result.dates?.lastChanged || -- }}</span></td>
+          </tr>
+          <tr>
+            <td class="table-label">注册人</td>
+            <td class="table-value">
+              <span v-if="result.registrant?.org">{{ result.registrant.org }}</span>
+              <span v-else-if="result.registrant?.name">{{ result.registrant.name }}</span>
+              <span v-else>{{ result.registrant || -- }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-label">技术联系人</td>
+            <td class="table-value">
+              <span v-if="result.technical?.org">{{ result.technical.org }}</span>
+              <span v-else-if="result.technical?.name">{{ result.technical.name }}</span>
+              <span v-else>--</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-label">Abuse 联系</td>
+            <td class="table-value">
+              <span v-if="result.abuseContact?.email">{{ result.abuseContact.email }}</span>
+              <span v-else-if="result.abuseContact?.name">{{ result.abuseContact.name }}</span>
+              <span v-else>--</span>
+            </td>
           </tr>
           <tr>
             <td class="table-label">名称服务器</td>
-            <td class="table-value"><span>{{ result.ns || '--' }}</span></td>
+            <td class="table-value">
+              <span v-if="Array.isArray(result.nameservers)" v-for="(ns, i) in result.nameservers" :key="i" class="prop-tag">{{ ns }}</span>
+              <span v-else>{{ result.ns || result.nameservers || -- }}</span>
+            </td>
           </tr>
           <tr>
             <td class="table-label">状态</td>
-            <td class="table-value"><span>{{ result.status || '--' }}</span></td>
+            <td class="table-value">
+              <span v-if="Array.isArray(result.status)" v-for="(s, i) in result.status" :key="i" class="prop-tag">{{ s }}</span>
+              <span v-else>{{ result.status || -- }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="table-label">Whois 服务器</td>
+            <td class="table-value"><span>{{ result.whoisServer || result.server || -- }}</span></td>
           </tr>
         </tbody>
       </table>
@@ -120,6 +163,7 @@ async function query() {
   font-size: 1.15em;
 }
 
+.sub-info { font-size: 0.85em; color: #909399; }
 .prop-tag {
   display: inline-block;
   background: rgba(62, 175, 124, 0.1);
