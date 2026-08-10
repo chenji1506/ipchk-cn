@@ -151,31 +151,26 @@ onMounted(async () => {
     highlightedCode.value = '';
   }
 
-  // WebRTC 并行探测（手机有 IPv6 时最可靠，不等 API）
-  const rtcV6Promise = detectIPv6ViaWebRTC();
+  // IPv4/双栈结果一到就立即显示，不等 IPv6（跨境 IPv6 链路常不通会挂超时）
+  fetchWithTimeout(config.DualStackAPI, 3000).then((ip) => {
+    ipAddress.value = ip.trim();
+  }).catch(() => {});
 
-  // 三路独立探测（带 5s 超时，防止跨境 IPv6 链路挂起）
-  const [dualStack, ipV4, ipV6] = await Promise.allSettled([
-    fetchWithTimeout(config.DualStackAPI),
-    fetchWithTimeout(config.v4OnlyAPI),
-    fetchWithTimeout(config.v6OnlyAPI)
-  ]);
-
-  if (dualStack.status === 'fulfilled') {
-    ipAddress.value = dualStack.value.trim();
-  }
-  if (ipV4.status === 'fulfilled' && isIPv4(ipV4.value.trim())) {
-    yourIPv4.value = ipV4.value.trim();
-  }
-  if (ipV6.status === 'fulfilled' && isIPv6(ipV6.value.trim())) {
-    yourIPv6.value = ipV6.value.trim();
-  }
-  // 兜底：API 探测不到 IPv6 时，用 WebRTC 结果（并行已启动）
-  if (!yourIPv6.value) {
-    const v6 = await rtcV6Promise;
-    if (v6) {
-      yourIPv6.value = v6;
+  fetchWithTimeout(config.v4OnlyAPI, 3000).then((ip) => {
+    if (isIPv4(ip.trim())) {
+      yourIPv4.value = ip.trim();
     }
+  }).catch(() => {});
+
+  // IPv6 后台并行探测：API + WebRTC 谁先出用谁，不阻塞 IPv4 显示
+  const rtcV6Promise = detectIPv6ViaWebRTC();
+  const v6FromApi = fetchWithTimeout(config.v6OnlyAPI, 2500)
+    .then((ip) => (isIPv6(ip.trim()) ? ip.trim() : ''))
+    .catch(() => '');
+  const [v6a, v6b] = await Promise.all([v6FromApi, rtcV6Promise]);
+  const v6 = v6a || v6b;
+  if (v6) {
+    yourIPv6.value = v6;
   }
 });
 </script>
