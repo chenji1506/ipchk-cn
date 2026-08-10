@@ -57,33 +57,33 @@ async function query() {
             <td class="table-label">注册商</td>
             <td class="table-value">
               <span v-if="result.registrar?.name">{{ result.registrar.name }} <span v-if="result.registrar.ianaId" class="sub-info">(IANA ID: {{ result.registrar.ianaId }})</span></span>
-              <span v-else>{{ result.registrar || -- }}</span>
+              <span v-else>{{ result.registrar || '--' }}</span>
             </td>
           </tr>
           <tr>
             <td class="table-label">注册时间</td>
             <td class="table-value">
               <span v-if="result.dates?.registration">{{ result.dates.registration }}</span>
-              <span v-else>{{ result.creation || -- }}</span>
+              <span v-else>{{ result.creation || '--' }}</span>
             </td>
           </tr>
           <tr>
             <td class="table-label">过期时间</td>
             <td class="table-value">
               <span v-if="result.dates?.expiration">{{ result.dates.expiration }}</span>
-              <span v-else>{{ result.expiry || -- }}</span>
+              <span v-else>{{ result.expiry || '--' }}</span>
             </td>
           </tr>
           <tr>
             <td class="table-label">最后变更</td>
-            <td class="table-value"><span>{{ result.dates?.lastChanged || -- }}</span></td>
+            <td class="table-value"><span>{{ result.dates?.lastChanged || '--' }}</span></td>
           </tr>
           <tr>
             <td class="table-label">注册人</td>
             <td class="table-value">
               <span v-if="result.registrant?.org">{{ result.registrant.org }}</span>
               <span v-else-if="result.registrant?.name">{{ result.registrant.name }}</span>
-              <span v-else>{{ result.registrant || -- }}</span>
+              <span v-else>{{ result.registrant || '--' }}</span>
             </td>
           </tr>
           <tr>
@@ -106,19 +106,19 @@ async function query() {
             <td class="table-label">名称服务器</td>
             <td class="table-value">
               <span v-if="Array.isArray(result.nameservers)" v-for="(ns, i) in result.nameservers" :key="i" class="prop-tag">{{ ns }}</span>
-              <span v-else>{{ result.ns || result.nameservers || -- }}</span>
+              <span v-else>{{ result.ns || result.nameservers || '--' }}</span>
             </td>
           </tr>
           <tr>
             <td class="table-label">状态</td>
             <td class="table-value">
               <span v-if="Array.isArray(result.status)" v-for="(s, i) in result.status" :key="i" class="prop-tag">{{ s }}</span>
-              <span v-else>{{ result.status || -- }}</span>
+              <span v-else>{{ result.status || '--' }}</span>
             </td>
           </tr>
           <tr>
             <td class="table-label">Whois 服务器</td>
-            <td class="table-value"><span>{{ result.whoisServer || result.server || -- }}</span></td>
+            <td class="table-value"><span>{{ result.whoisServer || result.server || '--' }}</span></td>
           </tr>
         </tbody>
       </table>
