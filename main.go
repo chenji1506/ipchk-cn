@@ -1492,6 +1492,13 @@ func portScanHandler(c *gin.Context) {
 }
 
 // whoisHandler 域名/IP 注册信息查询（域名用 whois 协议，IP 用 RDAP）
+var whoisCache sync.Map
+
+type whoisCacheEntry struct {
+	result    interface{}
+	timestamp time.Time
+}
+
 func whoisHandler(c *gin.Context) {
 	target := c.Param("target")
 	if target == "" {
@@ -1505,28 +1512,23 @@ func whoisHandler(c *gin.Context) {
 		return
 	}
 
-	// 域名查询：whois 协议（ICANN 要求所有注册局提供，覆盖所有 TLD）
-	rawText, server, err := whoisLookup(target)
+	// 域名查询：结构化 whois（likexian 库 + happy-eyeballs + 字段解析）
+	domain := strings.ToLower(strings.TrimSpace(target))
+	if cached, ok := whoisCache.Load(domain); ok {
+		entry := cached.(whoisCacheEntry)
+		if time.Since(entry.timestamp) < 5*time.Minute {
+			c.JSON(http.StatusOK, entry.result)
+			return
+		}
+		whoisCache.Delete(domain)
+	}
+	result, err := webtest.QueryWhois(domain)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"target": target,
-			"error":  "Whois 查询失败：" + err.Error(),
-		})
+		c.JSON(http.StatusOK, gin.H{"target": domain, "error": "Whois 查询失败：" + err.Error()})
 		return
 	}
-	fields := extractWhoisFields(rawText)
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"target":    target,
-		"type":      "domain",
-		"server":    server,
-		"registrar": fields["registrar"],
-		"creation":  fields["creation"],
-		"expiry":    fields["expiry"],
-		"ns":        fields["ns"],
-		"status":    fields["status"],
-		"registrant": fields["registrant"],
-		"raw":       rawText,
-	})
+	whoisCache.Store(domain, whoisCacheEntry{result: result, timestamp: time.Now()})
+	c.JSON(http.StatusOK, result)
 }
 
 // whoisRawQuery 向指定 whois 服务器发起 TCP 43 查询
