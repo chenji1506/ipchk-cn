@@ -221,7 +221,7 @@ useHead({
 
   <footer>
     <div class="one-line">
-      Copyright © ip查询&<a href="https://github.com/chenji1506/ipchk-cn" target="_blank" rel="noreferrer">ipchk.cn</a> 2026  | <img src="/ipv6-s1.svg" alt="IPv6 相关标识"/> | <img src="/ssl-s1.svg" alt="SSL 相关标识"/> | All right reserved
+      Copyright © ip查询&<a href="https://github.com/chenji1506/ipchk-cn" target="_blank" rel="noreferrer">ipchk.cn</a>&<a href="https://github.com/nomdn/ipw-cn" target="_blank" rel="noreferrer">nomdn</a> 2026  | <img src="/ipv6-s1.svg" alt="IPv6 相关标识"/> | <img src="/ssl-s1.svg" alt="SSL 相关标识"/> | All right reserved
     </div>
     <div class="one-line">
       <a v-if="config.ICP" href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer" >{{ config.ICP }}</a>

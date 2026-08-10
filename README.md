@@ -1,6 +1,6 @@
 # ipchk.cn - IP 查询与网络诊断工具
 
-基于 GPL-3.0 开源协议构建的 IP 查询与网络诊断工具站，源码遵循 GPL v3.0 开源。
+基于 GPL-3.0 开源项目 [nomdn/ipw-cn](https://github.com/nomdn/ipw-cn) 构建的 IP 查询与网络诊断工具站，源码遵循 GPL v3.0 开源。
 
 在线体验：https://ipchk.cn
 
@@ -91,4 +91,4 @@ bash deploy/install.sh
 
 ## 许可证
 
-GPL-3.0（保留 GPL-3.0 许可证）
+GPL-3.0（基于 nomdn/ipw-cn 二次开发，保留原许可证与版权声明）
