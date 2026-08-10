@@ -752,7 +752,7 @@ html.dark .ipv6-tip { color: #9ca3af; }
   .code-block { padding: 0.8rem; font-size: 0.8em; }
 }
 </style>
-
+<style>
 :root {
   --el-color-primary: #3EAF7C;
 }
