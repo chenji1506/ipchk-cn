@@ -2,7 +2,57 @@
 import { computed, ref, onMounted } from 'vue';
 import { isIPv6 } from 'is-ip';
 import { config } from '../../config/index';
-import { CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue';
+import { CircleCheckFilled, CircleCloseFilled, CopyDocument, Location, Loading, WarningFilled, InfoFilled, Terminal, Connection, Lock, Odometer, Search, List, Grid } from '@element-plus/icons-vue';
+
+// 工具快捷入口
+const tools = [
+  { to: '/dns', name: 'DNS解析', desc: 'A / AAAA / MX', icon: Connection, color: 'green' },
+  { to: '/ssl', name: 'SSL检查', desc: '证书有效期', icon: Lock, color: 'blue' },
+  { to: '/tcping', name: 'TCPing', desc: '端口连通性', icon: Odometer, color: 'orange' },
+  { to: '/whois', name: 'Whois查询', desc: '域名注册信息', icon: Search, color: 'purple' },
+  { to: '/batch', name: '批量查询', desc: '多 IP 归属地', icon: List, color: 'red' },
+  { to: '/cidr', name: '子网计算', desc: 'IPv4 / IPv6 网段', icon: Grid, color: 'cyan' },
+];
+
+// 复制 IP
+const copied4 = ref(false);
+const copied6 = ref(false);
+async function copyText(ip: string, target: 'v4' | 'v6') {
+  if (!ip) return;
+  try {
+    await navigator.clipboard.writeText(ip);
+  } catch {
+    const ta = document.createElement('textarea');
+    ta.value = ip;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  if (target === 'v4') {
+    copied4.value = true;
+    setTimeout(() => (copied4.value = false), 1500);
+  } else {
+    copied6.value = true;
+    setTimeout(() => (copied6.value = false), 1500);
+  }
+}
+
+// 网络状态
+const netStatusClass = computed(() => {
+  if (yourIPv6.value && isIPv6(yourIPv6.value)) return 'v6';
+  if (yourIPv4.value && isIPv4(yourIPv4.value)) return 'v4';
+  return 'loading';
+});
+const netStatusText = computed(() => {
+  if (yourIPv6.value && isIPv6(yourIPv6.value)) return '您的网络 IPv6 优先';
+  if (yourIPv4.value && isIPv4(yourIPv4.value)) return '您的网络 IPv4 优先';
+  return '正在检测您的网络...';
+});
+
+
 import { highlightCode } from '../../utils/shiki';
 import { isIPv4 } from '../../utils/tools';
 const route = useRoute();
@@ -178,104 +228,273 @@ onMounted(async () => {
 
 
 <template>
-  <div class="title">
-    <header>
-      <h1>IP查询</h1>
-      <p>致力于IP查询去中心化,推进 IPv6 规模部署和应用</p>
-    </header>
+  <!-- Hero 区 -->
+  <div class="hero">
+    <div class="hero-glow hero-glow-1"></div>
+    <div class="hero-glow hero-glow-2"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">IP 查询</h1>
+      <p class="hero-subtitle">致力于 IP 查询去中心化，推进 IPv6 规模部署和应用</p>
+      <div class="hero-badges">
+        <span class="hero-badge"><span class="hero-badge-dot"></span>IPv4 / IPv6 双栈</span>
+        <span class="hero-badge hero-badge-free">免费 · 无需注册</span>
+      </div>
+    </div>
   </div>
+
   <div class="content">
     <!-- IP 展示卡片 -->
-    <div class="ip-card">
-      <div class="ip-card-header">
-        <span class="ip-tag ipv4-tag">IPv4</span>
-        <span class="ip-card-status">本机公网地址</span>
+    <div class="ip-cards">
+      <div class="ip-card">
+        <div class="ip-card-header">
+          <span class="ip-tag ipv4-tag">IPv4</span>
+          <span class="ip-card-status"><span class="status-dot status-dot-green"></span>本机公网地址</span>
+          <button v-if="yourIPv4" class="ip-copy-btn" @click="copyText(yourIPv4, 'v4')">
+            <el-icon><CopyDocument /></el-icon>{{ copied4 ? '已复制' : '复制' }}
+          </button>
+        </div>
+        <div class="ip-card-body">
+          <template v-if="yourIPv4">
+            <span class="ip-addr">{{ yourIPv4 }}</span>
+            <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv4}`" target="_blank">
+              <el-icon><Location /></el-icon>查询归属地
+            </RouterLink>
+          </template>
+          <div v-else class="ip-loading"><el-icon class="is-loading"><Loading /></el-icon>获取中...</div>
+        </div>
       </div>
-      <div class="ip-card-body">
-        <span class="ip-addr">{{ yourIPv4 }}</span>
-        <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv4}`" target="_blank">查询归属地</RouterLink>
+
+      <div class="ip-card">
+        <div class="ip-card-header">
+          <span class="ip-tag ipv6-tag">IPv6</span>
+          <span class="ip-card-status"><span class="status-dot status-dot-purple"></span>本机公网地址</span>
+          <button v-if="yourIPv6" class="ip-copy-btn" @click="copyText(yourIPv6, 'v6')">
+            <el-icon><CopyDocument /></el-icon>{{ copied6 ? '已复制' : '复制' }}
+          </button>
+        </div>
+        <div class="ip-card-body">
+          <template v-if="yourIPv6">
+            <span class="ip-addr ip-addr-v6">{{ yourIPv6 }}</span>
+            <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv6}`" target="_blank">
+              <el-icon><Location /></el-icon>查询归属地
+            </RouterLink>
+          </template>
+          <template v-else>
+            <div class="ip-loading ip-loading-empty"><el-icon><WarningFilled /></el-icon>未检测到 IPv6 地址</div>
+            <RouterLink class="ip-loc-btn ip-loc-btn-ghost" to="/doc/user/enable_ipv6" target="_blank">如何开启 IPv6</RouterLink>
+          </template>
+        </div>
       </div>
     </div>
 
-    <div class="ip-card">
-      <div class="ip-card-header">
-        <span class="ip-tag ipv6-tag">IPv6</span>
-        <span class="ip-card-status">本机公网地址</span>
-      </div>
-      <div class="ip-card-body">
-        <template v-if="yourIPv6">
-          <span class="ip-addr">{{ yourIPv6 }}</span>
-          <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv6}`" target="_blank">查询归属地</RouterLink>
-        </template>
-        <template v-else>
-          <span class="ip-addr ip-addr-empty">未检测到 IPv6 地址</span>
-          <RouterLink class="ip-loc-btn ip-loc-btn-ghost" to="/doc/user/enable_ipv6" target="_blank">查看如何开启 IPv6</RouterLink>
-        </template>
-      </div>
+    <!-- 网络状态徽章 -->
+    <div class="net-status" :class="'net-' + netStatusClass">
+      <el-icon v-if="netStatusClass === 'loading'" class="is-loading"><Loading /></el-icon>
+      <el-icon v-else-if="netStatusClass === 'v6'"><CircleCheckFilled /></el-icon>
+      <el-icon v-else><CircleCloseFilled /></el-icon>
+      <span>{{ netStatusText }}</span>
     </div>
-    <div style="font-size: 1.5em;">
-      <h3 v-if="yourIPv6 && isIPv6(yourIPv6)"><el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>您的网络IPv6优先</h3>
-      <h3 v-else-if="yourIPv4 && isIPv4(yourIPv4)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>您的网络IPv4优先</h3>
-      <h3 v-else><el-icon><CircleCloseFilled /></el-icon>查询中，请稍后</h3>
-    </div>
-     <blockquote>
-      手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。
-    </blockquote>
 
+    <!-- 工具快捷入口 -->
+    <div class="tool-grid">
+      <RouterLink v-for="tool in tools" :key="tool.to" :to="tool.to" class="tool-item">
+        <el-icon class="tool-icon" :class="'tool-icon-' + tool.color"><component :is="tool.icon" /></el-icon>
+        <span class="tool-name">{{ tool.name }}</span>
+        <span class="tool-desc">{{ tool.desc }}</span>
+      </RouterLink>
+    </div>
+
+    <!-- 命令行示例 -->
     <div class="code-card">
       <div class="code-card-header">
-        <span class="code-card-title">命令行示例</span>
+        <div class="code-card-title-wrap">
+          <span class="code-card-title"><el-icon><Terminal /></el-icon>命令行示例</span>
+          <span class="code-card-sub">使用 curl 快速获取本机 IP</span>
+        </div>
         <button class="code-copy-btn" :class="{ 'copied': copied }" @click="copyCode">{{ copied ? '已复制 ✓' : '复制' }}</button>
       </div>
       <div v-if="highlightedCode" v-html="highlightedCode" class="code-block"></div>
       <div v-else class="code-block code-block--fallback">{{ code }}</div>
     </div>
-  </div>
 
+    <blockquote class="ipv6-tip">
+      <el-icon><InfoFilled /></el-icon>
+      <span>手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。</span>
+    </blockquote>
+  </div>
 </template>
+
 <style scoped>
 @import "../style.css";
 .el-menu--horizontal > .el-menu-item:nth-child(1) {
   margin-right: auto;
 }
 
-/* IP 展示卡片 */
+/* ===== Hero 区 ===== */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 56px 20px 40px;
+  overflow: hidden;
+}
+.hero-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-glow-1 {
+  width: 460px;
+  height: 460px;
+  background: #3EAF7C;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-130%);
+}
+.hero-glow-2 {
+  width: 400px;
+  height: 400px;
+  background: #7C4DFF;
+  top: -180px;
+  right: 50%;
+  transform: translateX(130%);
+}
+html.dark .hero-glow { opacity: 0.16; }
+.hero-content { position: relative; z-index: 1; }
+.hero-title {
+  font-size: 2.6em;
+  font-weight: 800;
+  margin: 0 0 10px;
+  background: linear-gradient(135deg, #2E9A68, #3EAF7C 45%, #7C4DFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+}
+.hero-subtitle {
+  margin: 0 0 18px;
+  font-size: 1.05em;
+  color: #6b7280;
+}
+html.dark .hero-subtitle { color: #9ca3af; }
+.hero-badges {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(62, 175, 124, 0.1);
+  border: 1px solid rgba(62, 175, 124, 0.3);
+  color: #2E9A68;
+  font-weight: 600;
+}
+.hero-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3EAF7C;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.hero-badge-free {
+  background: rgba(124, 77, 255, 0.08);
+  border-color: rgba(124, 77, 255, 0.28);
+  color: #6a3de0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+/* ===== IP 卡片区 ===== */
+.ip-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .ip-cards { grid-template-columns: 1fr; }
+}
+
 .ip-card {
-  background: linear-gradient(135deg, rgba(62, 175, 124, 0.07), rgba(62, 175, 124, 0.02));
-  border: 1px solid rgba(62, 175, 124, 0.22);
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 12px;
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e8ecf0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 12px rgba(31, 45, 61, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
 }
 html.dark .ip-card {
-  background: linear-gradient(135deg, rgba(62, 175, 124, 0.12), rgba(62, 175, 124, 0.03));
-  border-color: rgba(62, 175, 124, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
 }
 .ip-card:hover {
-  box-shadow: 0 4px 18px rgba(62, 175, 124, 0.18);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(31, 45, 61, 0.1);
+  transform: translateY(-2px);
+}
+html.dark .ip-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
 }
 
 .ip-card-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 .ip-tag {
   font-size: 0.78em;
   font-weight: 700;
   letter-spacing: 0.5px;
-  padding: 2px 10px;
-  border-radius: 5px;
+  padding: 3px 12px;
+  border-radius: 999px;
   color: #fff;
 }
-.ipv4-tag { background: #3EAF7C; }
-.ipv6-tag { background: #7C4DFF; }
+.ipv4-tag { background: linear-gradient(135deg, #3EAF7C, #2E9A68); box-shadow: 0 2px 8px rgba(62, 175, 124, 0.35); }
+.ipv6-tag { background: linear-gradient(135deg, #7C4DFF, #6a3de0); box-shadow: 0 2px 8px rgba(124, 77, 255, 0.35); }
 .ip-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.85em;
   color: #909399;
+  flex: 1;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.status-dot-green { background: #3EAF7C; }
+.status-dot-purple { background: #7C4DFF; }
+
+.ip-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #dcdfe6;
+  background: transparent;
+  color: #606266;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.ip-copy-btn:hover {
+  border-color: #3EAF7C;
+  color: #3EAF7C;
+  background: rgba(62, 175, 124, 0.06);
 }
 
 .ip-card-body {
@@ -283,11 +502,11 @@ html.dark .ip-card {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 .ip-addr {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, Monaco, monospace;
-  font-size: 1.55em;
+  font-size: 1.6em;
   font-weight: 700;
   background: linear-gradient(135deg, #3EAF7C, #2E9A68);
   -webkit-background-clip: text;
@@ -295,20 +514,36 @@ html.dark .ip-card {
   -webkit-text-fill-color: transparent;
   word-break: break-all;
 }
-.ip-addr-empty {
-  -webkit-text-fill-color: #909399;
-  font-size: 1.2em;
-  font-weight: 500;
+.ip-addr-v6 {
+  background: linear-gradient(135deg, #7C4DFF, #9a6bff);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
-html.dark .ip-addr-empty {
-  -webkit-text-fill-color: #8a8f98;
+.ip-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #909399;
+  font-size: 1.1em;
+  padding: 6px 0;
 }
+.ip-loading-empty { font-size: 1em; }
+html.dark .ip-loading-empty { color: #8a8f98; }
+.is-loading { animation: rotating 1.2s linear infinite; }
+@keyframes rotating {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .ip-loc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.95em;
   color: #3EAF7C;
   border: 1px solid rgba(62, 175, 124, 0.45);
-  border-radius: 6px;
-  padding: 5px 16px;
+  border-radius: 8px;
+  padding: 6px 16px;
   text-decoration: none;
   white-space: nowrap;
   transition: all 0.25s ease;
@@ -327,43 +562,134 @@ html.dark .ip-addr-empty {
   color: #fff;
 }
 
-@media (max-width: 768px) {
-  .ip-addr {
-    font-size: 1.2em;
-  }
-  .ip-card-body {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+/* ===== 网络状态徽章 ===== */
+.net-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  font-size: 0.95em;
+  font-weight: 600;
+  margin: 22px 0 4px;
+  justify-self: center;
+}
+.net-v4 {
+  background: rgba(62, 175, 124, 0.1);
+  border: 1px solid rgba(62, 175, 124, 0.3);
+  color: #2E9A68;
+}
+.net-v6 {
+  background: rgba(124, 77, 255, 0.1);
+  border: 1px solid rgba(124, 77, 255, 0.3);
+  color: #6a3de0;
+}
+.net-loading {
+  background: rgba(144, 147, 153, 0.1);
+  border: 1px solid rgba(144, 147, 153, 0.3);
+  color: #909399;
 }
 
+/* ===== 工具快捷入口 ===== */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin: 26px 0 8px;
+}
+@media (max-width: 900px) {
+  .tool-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 480px) {
+  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.tool-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 8px 14px;
+  border-radius: 14px;
+  border: 1px solid #e8ecf0;
+  background: #fff;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+html.dark .tool-item {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.tool-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(31, 45, 61, 0.1);
+  border-color: rgba(62, 175, 124, 0.4);
+}
+html.dark .tool-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.tool-icon {
+  font-size: 1.7em;
+}
+.tool-icon-green { color: #3EAF7C; }
+.tool-icon-blue { color: #409EFF; }
+.tool-icon-orange { color: #E6A23C; }
+.tool-icon-purple { color: #7C4DFF; }
+.tool-icon-red { color: #F56C6C; }
+.tool-icon-cyan { color: #00b3a4; }
+.tool-name {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #303133;
+}
+html.dark .tool-name { color: #e5e7eb; }
+.tool-desc {
+  font-size: 0.75em;
+  color: #909399;
+}
+
+/* ===== 命令行示例 ===== */
 .code-card {
-  margin-top: 1rem;
-  border-radius: 12px;
+  margin-top: 1.2rem;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(62, 175, 124, 0.25);
-  background: rgba(62, 175, 124, 0.04);
+  border: 1px solid #e8ecf0;
+  background: #fff;
 }
-
+html.dark .code-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 .code-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px;
-  border-bottom: 1px solid rgba(62, 175, 124, 0.18);
+  padding: 10px 16px;
+  border-bottom: 1px solid #eef1f4;
 }
-
+html.dark .code-card-header { border-color: rgba(255, 255, 255, 0.08); }
+.code-card-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .code-card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.9em;
-  font-weight: 600;
+  font-weight: 700;
   color: #3EAF7C;
   letter-spacing: 0.5px;
 }
-
+.code-card-sub {
+  font-size: 0.78em;
+  color: #a8abb2;
+}
 .code-copy-btn {
   font-size: 0.85em;
-  padding: 3px 14px;
-  border-radius: 6px;
+  padding: 4px 14px;
+  border-radius: 999px;
   border: 1px solid rgba(62, 175, 124, 0.4);
   background: transparent;
   color: #3EAF7C;
@@ -381,29 +707,52 @@ html.dark .ip-addr-empty {
 
 .code-block {
   margin-top: 0;
-  padding: 1rem;
+  padding: 1rem 1.1rem;
   border-radius: 0;
   overflow-x: auto;
   max-width: 100%;
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
-
 .code-block--fallback {
-  background: rgb(48, 46, 46);
-  border: 1px solid rgba(62, 175, 124, 0.18);
+  background: #1e1e2e;
+  border: none;
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
-  color: rgb(255, 255, 255);
+  color: #e5e7eb;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+/* ===== IPv6 提示 ===== */
+.ipv6-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(62, 175, 124, 0.06);
+  border: 1px solid rgba(62, 175, 124, 0.18);
+  border-left: 4px solid #3EAF7C;
+  color: #6b7280;
+  font-size: 0.9em;
+}
+html.dark .ipv6-tip { color: #9ca3af; }
+.ipv6-tip .el-icon {
+  color: #3EAF7C;
+  margin-top: 3px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
-  .code-block {
-    padding: 0.75rem;
-    font-size: 0.8em;
-  }
+  .hero { padding: 40px 16px 28px; }
+  .hero-title { font-size: 2em; }
+  .ip-addr { font-size: 1.25em; }
+  .ip-card-body { flex-direction: column; align-items: flex-start; }
+  .code-block { padding: 0.8rem; font-size: 0.8em; }
 }
 </style>
-<style>
+
 :root {
   --el-color-primary: #3EAF7C;
 }
