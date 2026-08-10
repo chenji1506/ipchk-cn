@@ -65,8 +65,7 @@ const userIP = ref('')
 
 const apiList = config.apiBaseUrls
 const currentApiIndex = ref(0)
-const backendID = computed(() => apiList[currentApiIndex.value]?.id || '')
-const whoisUrl = computed(() => '/middleware/' + backendID.value + '/whois/' + domain.value)
+const whoisUrl = computed(() => apiList[currentApiIndex.value].url + 'v1/whois/' + encodeURIComponent(domain.value))
 
 const { data: whoisData, error: whoisError, execute: executeWhois } = useFetch<any>(whoisUrl, {
   immediate: false,
