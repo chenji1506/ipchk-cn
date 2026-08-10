@@ -104,10 +104,11 @@ const yourIPv4 = ref('');
 const yourIPv6 = ref('');
 
 // 带超时的请求（防止 IPv6 跨境链路挂起阻塞页面）
+// 注意：用原生 fetch 而非 $fetch——$fetch 依赖 Nuxt auto-import，本地构建时 import 可能丢失导致 ReferenceError
 function fetchWithTimeout(url: string, ms = 5000): Promise<string> {
   return Promise.race([
-    $fetch<string>(url),
-    new Promise<string>((_, reject) => setTimeout(() => reject(new Error(timeout)), ms))
+    fetch(url).then((r) => r.text()),
+    new Promise<string>((_, reject) => setTimeout(() => reject(new Error('请求超时')), ms))
   ]);
 }
 
