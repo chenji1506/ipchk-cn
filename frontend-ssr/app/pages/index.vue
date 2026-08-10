@@ -2,7 +2,7 @@
 import { computed, ref, onMounted } from 'vue';
 import { isIPv6 } from 'is-ip';
 import { config } from '../../config/index';
-import { CircleCheckFilled, CircleCloseFilled, CopyDocument, Location, Loading, WarningFilled, InfoFilled, Terminal, Connection, Lock, Odometer, Search, List, Grid } from '@element-plus/icons-vue';
+import { CircleCheckFilled, CircleCloseFilled, CopyDocument, Location, Loading, WarningFilled, InfoFilled, Monitor, Connection, Lock, Odometer, Search, List, Grid } from '@element-plus/icons-vue';
 
 // 工具快捷入口
 const tools = [
@@ -308,7 +308,7 @@ onMounted(async () => {
     <div class="code-card">
       <div class="code-card-header">
         <div class="code-card-title-wrap">
-          <span class="code-card-title"><el-icon><Terminal /></el-icon>命令行示例</span>
+          <span class="code-card-title"><el-icon><Monitor /></el-icon>命令行示例</span>
           <span class="code-card-sub">使用 curl 快速获取本机 IP</span>
         </div>
         <button class="code-copy-btn" :class="{ 'copied': copied }" @click="copyCode">{{ copied ? '已复制 ✓' : '复制' }}</button>
