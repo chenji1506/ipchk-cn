@@ -803,10 +803,19 @@ func sslCheckHandler(c *gin.Context) {
 	c.JSON(200, rawResult.(*SSLCheckResult))
 }
 
+// writeJSON 统一 JSON 输出：默认紧凑；?pretty=1 时格式化（缩进换行）
+func writeJSON(c *gin.Context, data interface{}) {
+	if c.Query("pretty") == "1" {
+		c.IndentedJSON(http.StatusOK, data)
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
 func locateIP(c *gin.Context) {
 	ip := c.Param("ip")
 	slog.Debug("Locating IP", "ip", ip)
-	c.JSON(http.StatusOK, mergeLocationSources(ip))
+	writeJSON(c, mergeLocationSources(ip))
 }
 func locateUserIP(c *gin.Context) {
 	ip := c.ClientIP()
@@ -816,7 +825,7 @@ func locateUserIP(c *gin.Context) {
 		c.String(http.StatusOK, formatLocationText(ip, mergeLocationSources(ip)))
 		return
 	}
-	c.JSON(http.StatusOK, mergeLocationSources(ip))
+	writeJSON(c, mergeLocationSources(ip))
 }
 
 // mergeLocationSources 合并多数据源：ip-api.com（主）+ 本地库（bilibili/ip2region/qqwry/maxmind/dbip/geocn）
@@ -1247,7 +1256,7 @@ func analyticsHandler(c *gin.Context) {
 		"now":       time.Now().Format("2006-01-02 15:04:05"),
 	}
 	logStatsMu.Unlock()
-	c.JSON(http.StatusOK, resp)
+	writeJSON(c, resp)
 }
 
 // ============ 实时日志查看 ============
@@ -1291,7 +1300,7 @@ func logsHandler(c *gin.Context) {
 		lastTs = parseLogTimestamp(rows[len(rows)-1])
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	writeJSON(c, map[string]interface{}{
 		"lines":  len(filtered),
 		"lastTs": lastTs,
 		"logs":   filtered,
@@ -1483,7 +1492,7 @@ func portScanHandler(c *gin.Context) {
 			open++
 		}
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
+	writeJSON(c, map[string]interface{}{
 		"host":  host,
 		"total": len(ports),
 		"open":  open,
@@ -1517,18 +1526,18 @@ func whoisHandler(c *gin.Context) {
 	if cached, ok := whoisCache.Load(domain); ok {
 		entry := cached.(whoisCacheEntry)
 		if time.Since(entry.timestamp) < 5*time.Minute {
-			c.JSON(http.StatusOK, entry.result)
+			writeJSON(c, entry.result)
 			return
 		}
 		whoisCache.Delete(domain)
 	}
 	result, err := webtest.QueryWhois(domain)
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"target": domain, "error": "Whois 查询失败：" + err.Error()})
+		writeJSON(c, gin.H{"target": domain, "error": "Whois 查询失败：" + err.Error()})
 		return
 	}
 	whoisCache.Store(domain, whoisCacheEntry{result: result, timestamp: time.Now()})
-	c.JSON(http.StatusOK, result)
+	writeJSON(c, result)
 }
 
 // whoisRawQuery 向指定 whois 服务器发起 TCP 43 查询
@@ -1756,7 +1765,7 @@ func whoisRDAP(c *gin.Context, target string) {
 			msg += "：" + lastErr
 		}
 		msg += "（该域名可能不存在或无 RDAP 记录）"
-		c.JSON(http.StatusOK, gin.H{"target": target, "error": msg})
+		writeJSON(c, gin.H{"target": target, "error": msg})
 		return
 	}
 
@@ -1833,7 +1842,7 @@ func whoisRDAP(c *gin.Context, target string) {
 		}
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
+	writeJSON(c, map[string]interface{}{
 		"target":       target,
 		"type":         "domain",
 		"registrar":    registrar,
@@ -1905,7 +1914,7 @@ func purityHandler(c *gin.Context) {
 		c.String(http.StatusOK, formatPurityText(result))
 		return
 	}
-	c.JSON(http.StatusOK, result)
+	writeJSON(c, result)
 }
 
 // formatPurityText IP 纯净度 CLI 格式化输出
@@ -2237,7 +2246,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "aaaa":
 		result, err := webtest.ResolveAAAARecord(domain)
 		if err != nil {
@@ -2246,7 +2255,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "cname":
 		result, err := webtest.ResolveCNAMERecord(domain)
 		if err != nil {
@@ -2255,7 +2264,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "mx":
 		result, err := webtest.ResolveMXRecord(domain)
 		if err != nil {
@@ -2264,7 +2273,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "ns":
 		result, err := webtest.ResolveNSRecord(domain)
 		if err != nil {
@@ -2273,7 +2282,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "ptr":
 		result, err := webtest.ResolvePTRRecord(domain)
 		if err != nil {
@@ -2282,7 +2291,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "srv":
 		result, err := webtest.ResolveSRVRecord(domain)
 		if err != nil {
@@ -2291,7 +2300,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "txt":
 		result, err := webtest.ResolveTXTRecord(domain)
 		if err != nil {
@@ -2300,7 +2309,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	case "caa":
 		result, err := webtest.ResolveCAARecord(domain)
 		if err != nil {
@@ -2309,7 +2318,7 @@ func dnsQueryHandler(c *gin.Context) {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, result)
+		writeJSON(c, result)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid record type",
@@ -2432,7 +2441,7 @@ func pingHandler(c *gin.Context) {
 }
 
 func healchCheck(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
+	writeJSON(c, gin.H{
 		"status": "ok",
 	})
 }
