@@ -1859,6 +1859,11 @@ func purityHandler(c *gin.Context) {
 	if ip == "" {
 		ip = c.ClientIP()
 	}
+	// 非法 IP 快速拒绝，避免浪费多源请求
+	if net.ParseIP(ip) == nil {
+		writeJSON(c, gin.H{"error": "invalid IP address", "ip": ip})
+		return
+	}
 	agg := queryAggregated(ip)
 	if agg == nil || len(agg.Sources) == 0 {
 		// 全部数据源不可用：走旧逻辑兜底（本地 ipdb + 静态评分）
@@ -2035,20 +2040,20 @@ func calculateFraudScore(ip string, asn int, countryCode string, org string) int
 
 	// 2. ASN 分析（权重35%）
 	highRiskASNs := map[int]bool{
-		13335: true,  // Cloudflare
-		16509: true,  // Amazon AWS
-		14061: true,  // DigitalOcean
+		13335:  true, // Cloudflare
+		16509:  true, // Amazon AWS
+		14061:  true, // DigitalOcean
 		395747: true, // Vultr
-		20473: true,  // Linode
-		44440: true,  // OVH
-		54113: true,  // Fastly
-		15169: true,  // Google
-		8075:  true,  // Microsoft
-		31898: true,  // Oracle Cloud
-		36492: true,  // Oracle Cloud
+		20473:  true, // Linode
+		44440:  true, // OVH
+		54113:  true, // Fastly
+		15169:  true, // Google
+		8075:   true, // Microsoft
+		31898:  true, // Oracle Cloud
+		36492:  true, // Oracle Cloud
 		396982: true, // Google Cloud
-		14618: true,  // Amazon AWS
-		20940: true,  // Akamai
+		14618:  true, // Amazon AWS
+		20940:  true, // Akamai
 	}
 	mediumRiskASNs := map[int]bool{
 		32097:  true, // Alibaba

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 
 // 五维雷达：信誉/一致/黑名单/稳定/数据质量
-export interface DimensionItem {
+interface DimensionItem {
   score: number;
   max_score: number;
 }

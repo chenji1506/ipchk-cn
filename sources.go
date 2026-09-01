@@ -34,8 +34,8 @@ type Evidence struct {
 	ASOrg       string  `json:"as_org"` // "AS15169 Google LLC" 或 org 名
 	ISP         string  `json:"isp"`
 	Org         string  `json:"org"`
-	Type        string  `json:"type"` // hosting / business / isp / residential / mobile / unknown
-	Proxy       bool    `json:"proxy"` // 数据源显式标注的代理信号
+	Type        string  `json:"type"`    // hosting / business / isp / residential / mobile / unknown
+	Proxy       bool    `json:"proxy"`   // 数据源显式标注的代理信号
 	Hosting     bool    `json:"hosting"` // 数据源显式标注的机房信号
 	Latitude    float64 `json:"latitude"`
 	Longitude   float64 `json:"longitude"`
@@ -58,29 +58,29 @@ type Aggregated struct {
 	Type        string `json:"type"` // 多数派类型
 
 	// 一致性统计
-	CountrySources  int `json:"country_sources"`   // 参与国家投票的源数
-	CountryMajority int `json:"country_majority"`  // 多数派国家源数
-	CountryOutliers int `json:"country_outliers"`  // 离群国家源数
-	ASNSources      int `json:"asn_sources"`       // 参与 ASN 投票的源数
-	ASNMajority     int `json:"asn_majority"`      // 多数派 ASN 源数
-	ASNOutliers     int `json:"asn_outliers"`      // 离群 ASN 源数
-	TypeSources     int `json:"type_sources"`      // 参与类型投票的源数
-	TypeMajority    int `json:"type_majority"`     // 多数派类型源数
-	CityConflict    bool `json:"city_conflict"`    // 城市库差异
-	RDAPRegistered  bool `json:"rdap_registered"`  // RDAP 是否返回注册国
-	RDAPCountry     string `json:"rdap_country"`   // RDAP 注册国
-	RIR             string `json:"rir"`            // 所属 RIR
+	CountrySources  int    `json:"country_sources"`  // 参与国家投票的源数
+	CountryMajority int    `json:"country_majority"` // 多数派国家源数
+	CountryOutliers int    `json:"country_outliers"` // 离群国家源数
+	ASNSources      int    `json:"asn_sources"`      // 参与 ASN 投票的源数
+	ASNMajority     int    `json:"asn_majority"`     // 多数派 ASN 源数
+	ASNOutliers     int    `json:"asn_outliers"`     // 离群 ASN 源数
+	TypeSources     int    `json:"type_sources"`     // 参与类型投票的源数
+	TypeMajority    int    `json:"type_majority"`    // 多数派类型源数
+	CityConflict    bool   `json:"city_conflict"`    // 城市库差异
+	RDAPRegistered  bool   `json:"rdap_registered"`  // RDAP 是否返回注册国
+	RDAPCountry     string `json:"rdap_country"`     // RDAP 注册国
+	RIR             string `json:"rir"`              // 所属 RIR
 
 	// 信号
-	ProxySignal       bool     `json:"proxy_signal"`       // org/isp 关键词命中代理/VPN/Tor
-	ProxySignalCount  int      `json:"proxy_signal_count"` // 命中代理信号的源数
-	DataCenterSignal  bool     `json:"data_center_signal"` // 机房关键词信号
-	ResidentialSignal bool     `json:"residential_signal"` // 住宅关键词信号
+	ProxySignal       bool `json:"proxy_signal"`       // org/isp 关键词命中代理/VPN/Tor
+	ProxySignalCount  int  `json:"proxy_signal_count"` // 命中代理信号的源数
+	DataCenterSignal  bool `json:"data_center_signal"` // 机房关键词信号
+	ResidentialSignal bool `json:"residential_signal"` // 住宅关键词信号
 
 	// 覆盖
-	Sources        []string `json:"sources"`         // 成功源列表
-	FailedSources  []string `json:"failed_sources"`  // 失败源列表
-	ExpectedSource int      `json:"expected_source"` // 期望源数
+	Sources        []string  `json:"sources"`         // 成功源列表
+	FailedSources  []string  `json:"failed_sources"`  // 失败源列表
+	ExpectedSource int       `json:"expected_source"` // 期望源数
 	ProbedAt       time.Time `json:"probed_at"`
 }
 
@@ -380,9 +380,9 @@ func fetchIpwhoIs(ctx context.Context, ip string) *Evidence {
 			ID string `json:"id"`
 		} `json:"timezone"`
 		Connection struct {
-			ASN   int    `json:"asn"`
-			Org   string `json:"org"`
-			ISP   string `json:"isp"`
+			ASN    int    `json:"asn"`
+			Org    string `json:"org"`
+			ISP    string `json:"isp"`
 			Domain string `json:"domain"`
 		} `json:"connection"`
 		Latitude  float64 `json:"latitude"`
@@ -412,17 +412,17 @@ func fetchIpSb(ctx context.Context, ip string) *Evidence {
 		return nil
 	}
 	var raw struct {
-		IP          string  `json:"ip"`
-		CountryCode string  `json:"country_code"`
-		Country     string  `json:"country"`
-		Region      string  `json:"region"`
-		City        string  `json:"city"`
-		Latitude    float64 `json:"latitude"`
-		Longitude   float64 `json:"longitude"`
-		ASN         int     `json:"asn"`
-		Organization string `json:"organization"`
-		ISP         string  `json:"isp"`
-		Timezone    string  `json:"timezone"`
+		IP           string  `json:"ip"`
+		CountryCode  string  `json:"country_code"`
+		Country      string  `json:"country"`
+		Region       string  `json:"region"`
+		City         string  `json:"city"`
+		Latitude     float64 `json:"latitude"`
+		Longitude    float64 `json:"longitude"`
+		ASN          int     `json:"asn"`
+		Organization string  `json:"organization"`
+		ISP          string  `json:"isp"`
+		Timezone     string  `json:"timezone"`
 	}
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil
@@ -479,16 +479,16 @@ func fetchIP2Location(ctx context.Context, ip string) *Evidence {
 		return nil
 	}
 	var raw struct {
-		IP          string `json:"ip"`
-		CountryCode string `json:"country_code"`
-		Country     string `json:"country_name"`
-		Region      string `json:"region_name"`
-		City        string `json:"city_name"`
-		ISP         string `json:"isp"`
-		Org         string `json:"organization"`
-		ASN         string `json:"asn"`
-		UsageType   string `json:"usage_type"`
-		IsProxy     bool   `json:"is_proxy"`
+		IP          string  `json:"ip"`
+		CountryCode string  `json:"country_code"`
+		Country     string  `json:"country_name"`
+		Region      string  `json:"region_name"`
+		City        string  `json:"city_name"`
+		ISP         string  `json:"isp"`
+		Org         string  `json:"organization"`
+		ASN         string  `json:"asn"`
+		UsageType   string  `json:"usage_type"`
+		IsProxy     bool    `json:"is_proxy"`
 		Latitude    float64 `json:"latitude"`
 		Longitude   float64 `json:"longitude"`
 		Timezone    string  `json:"timezone"`

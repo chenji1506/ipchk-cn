@@ -14,12 +14,12 @@ import (
 // ============ 结果结构 ============
 
 type StabilityResult struct {
-	SuccessRate   float64 `json:"success_rate"`
-	AvgLatencyMs  float64 `json:"avg_latency_ms"`
-	P50LatencyMs  float64 `json:"p50_latency_ms"`
-	P95LatencyMs  float64 `json:"p95_latency_ms"`
-	TimeoutCount  int     `json:"timeout_count"`
-	Probed        bool    `json:"probed"`
+	SuccessRate  float64 `json:"success_rate"`
+	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	P50LatencyMs float64 `json:"p50_latency_ms"`
+	P95LatencyMs float64 `json:"p95_latency_ms"`
+	TimeoutCount int     `json:"timeout_count"`
+	Probed       bool    `json:"probed"`
 
 	probedAt time.Time
 }

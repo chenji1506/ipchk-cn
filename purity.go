@@ -18,8 +18,8 @@ import (
 // ============ 评分输出结构（对齐 ipchk.cc schema） ============
 
 type ScoreFormula struct {
-	PurityWeight     int `json:"purity_weight"`
-	StabilityWeight  int `json:"stability_weight"`
+	PurityWeight      int `json:"purity_weight"`
+	StabilityWeight   int `json:"stability_weight"`
 	DataQualityWeight int `json:"data_quality_weight"`
 	ClassificationCap int `json:"classification_cap"`
 }
@@ -46,21 +46,21 @@ type PurityDetail struct {
 }
 
 type ProfileDetail struct {
-	Primary       string `json:"primary"`
-	PrimaryTone   string `json:"primary_tone"`
-	Native        string `json:"native"`
-	NativeTone    string `json:"native_tone"`
-	Risk          string `json:"risk"`
-	RiskTone      string `json:"risk_tone"`
-	Summary       string `json:"summary"`
-	Tags          []Tag  `json:"tags"`
-	SourceCount   int    `json:"source_count"`
-	TypedSources  int    `json:"typed_sources"`
-	DefinitionNote string `json:"definition_note"`
-	AccessNetwork DimItem `json:"access_network"`
-	Privacy       DimItem `json:"privacy"`
-	Reputation    DimItem `json:"reputation"`
-	Network       DimItem `json:"network"`
+	Primary        string             `json:"primary"`
+	PrimaryTone    string             `json:"primary_tone"`
+	Native         string             `json:"native"`
+	NativeTone     string             `json:"native_tone"`
+	Risk           string             `json:"risk"`
+	RiskTone       string             `json:"risk_tone"`
+	Summary        string             `json:"summary"`
+	Tags           []Tag              `json:"tags"`
+	SourceCount    int                `json:"source_count"`
+	TypedSources   int                `json:"typed_sources"`
+	DefinitionNote string             `json:"definition_note"`
+	AccessNetwork  DimItem            `json:"access_network"`
+	Privacy        DimItem            `json:"privacy"`
+	Reputation     DimItem            `json:"reputation"`
+	Network        DimItem            `json:"network"`
 	Classification map[string]DimItem `json:"classification"`
 }
 
@@ -112,37 +112,37 @@ type PurityReport struct {
 	IP    string `json:"ip"`
 	Score int    `json:"score"`
 
-	ScoreFormula ScoreFormula `json:"score_formula"`
-	Purity       PurityDetail `json:"purity"`
-	Recommendation string     `json:"recommendation"`
-	IPType       string       `json:"ip_type"`
-	Profile      ProfileDetail `json:"profile"`
+	ScoreFormula   ScoreFormula  `json:"score_formula"`
+	Purity         PurityDetail  `json:"purity"`
+	Recommendation string        `json:"recommendation"`
+	IPType         string        `json:"ip_type"`
+	Profile        ProfileDetail `json:"profile"`
 
 	// 兼容旧字段（老调用方不受影响）
-	ASN                 int      `json:"asn"`
-	AsOrganization      string   `json:"asOrganization"`
-	Country             string   `json:"country"`
-	CountryCode         string   `json:"countryCode"`
-	Region              string   `json:"region"`
-	City                string   `json:"city"`
-	ISP                 string   `json:"isp"`
-	FraudScore          int      `json:"fraudScore"`
-	IPPureCoefficient   int      `json:"ippureCoefficient"`
-	CloudflareCoefficient int    `json:"cloudflareCoefficient"`
-	RiskLevel           string   `json:"riskLevel"`
-	IPSource            string   `json:"ipSource"`
-	IPProperties        []string `json:"ipProperties"`
-	IsDataCenter        bool     `json:"isDataCenter"`
-	IsResidential       bool     `json:"isResidential"`
-	IsBroadcast         bool     `json:"isBroadcast"`
-	Source              string   `json:"source"`
+	ASN                   int      `json:"asn"`
+	AsOrganization        string   `json:"asOrganization"`
+	Country               string   `json:"country"`
+	CountryCode           string   `json:"countryCode"`
+	Region                string   `json:"region"`
+	City                  string   `json:"city"`
+	ISP                   string   `json:"isp"`
+	FraudScore            int      `json:"fraudScore"`
+	IPPureCoefficient     int      `json:"ippureCoefficient"`
+	CloudflareCoefficient int      `json:"cloudflareCoefficient"`
+	RiskLevel             string   `json:"riskLevel"`
+	IPSource              string   `json:"ipSource"`
+	IPProperties          []string `json:"ipProperties"`
+	IsDataCenter          bool     `json:"isDataCenter"`
+	IsResidential         bool     `json:"isResidential"`
+	IsBroadcast           bool     `json:"isBroadcast"`
+	Source                string   `json:"source"`
 
 	// 新维度
-	Dimensions map[string]Dimension `json:"dimensions"`
-	Stability  StabilityDetail      `json:"stability"`
-	RBL        RBLDetail            `json:"rbl"`
-	DNSLeak    DNSLeakDetail        `json:"dns_leak"`
-	MainReasons []string            `json:"main_reasons"`
+	Dimensions  map[string]Dimension `json:"dimensions"`
+	Stability   StabilityDetail      `json:"stability"`
+	RBL         RBLDetail            `json:"rbl"`
+	DNSLeak     DNSLeakDetail        `json:"dns_leak"`
+	MainReasons []string             `json:"main_reasons"`
 }
 
 // ============ 类型上限 ============
@@ -233,15 +233,12 @@ func buildPurityReport(ip string, agg *Aggregated, rbl *RBLResult, stab *Stabili
 	// ---- signal_risk（公开风险信号） ----
 	var reasons []string
 	signalRisk := 0
-	proxyDetail := ""
 	if agg.ProxySignal {
 		if agg.ProxySignalCount >= 2 {
 			signalRisk += 26
-			proxyDetail = "多源共识"
 			reasons = append(reasons, "检测到代理/VPN 出口风险信号（多源共识）")
 		} else {
 			signalRisk += 13
-			proxyDetail = "单源"
 			reasons = append(reasons, "检测到代理/VPN 出口风险信号（单源，已减半扣分）")
 		}
 	}
@@ -346,6 +343,10 @@ func buildPurityReport(ip string, agg *Aggregated, rbl *RBLResult, stab *Stabili
 	}
 	stabilityScore := stabilityDimensionScore(stab)
 	rblScore := rblDimensionScore(rbl)
+	rblChecked := 0
+	if rbl != nil {
+		rblChecked = rbl.CheckedCount
+	}
 
 	// ---- 综合分 ----
 	score := int(float64(purityScore)*0.85 + float64(stabilityScore)*0.10 + float64(dataQuality)*0.05 + 0.5)
@@ -357,8 +358,8 @@ func buildPurityReport(ip string, agg *Aggregated, rbl *RBLResult, stab *Stabili
 		UncertaintyDeduction: uncertaintyDeduction, CoverageCeiling: coverageCeiling,
 		TypeCap: typeCap, EffectiveTypeCap: effectiveCap, CapSignalAdjustment: adjustment,
 		TypeCapDeduction: typeCap - effectiveCap,
-		Label: label, Tone: tone, Confidence: confidence, ConfidenceLabel: confidenceLabel,
-		EvidenceSourceCount: okCount, RblCheckedCount: 0,
+		Label:            label, Tone: tone, Confidence: confidence, ConfidenceLabel: confidenceLabel,
+		EvidenceSourceCount: okCount, RblCheckedCount: rblChecked,
 		Definition: "综合衡量代理与滥用信誉、黑名单、归属稳定性、IP 属性与类型置信度；机房、商业、运营商、类型冲突和证据不足会设置可解释的分数上限",
 		Reasons:    reasons,
 	}
@@ -367,7 +368,7 @@ func buildPurityReport(ip string, agg *Aggregated, rbl *RBLResult, stab *Stabili
 	r.Recommendation = recommendationOf(score)
 
 	// ---- 画像 ----
-	r.Profile = buildProfile(agg, ipType, typeTone, typeConflict, proxyDetail, signalRisk, identityRisk, okCount)
+	r.Profile = buildProfile(agg, ipType, typeTone, typeConflict, signalRisk, identityRisk, okCount)
 
 	// ---- 维度 ----
 	consistencyScore := 20 - (consistencyDeduction(agg))
@@ -461,7 +462,7 @@ func consistencyDeduction(agg *Aggregated) int {
 	return d
 }
 
-func buildProfile(agg *Aggregated, ipType, typeTone string, typeConflict bool, proxyDetail string, signalRisk, identityRisk, okCount int) ProfileDetail {
+func buildProfile(agg *Aggregated, ipType, typeTone string, typeConflict bool, signalRisk, identityRisk, okCount int) ProfileDetail {
 	p := ProfileDetail{
 		Primary:      typeLabelOf(ipType),
 		PrimaryTone:  typeTone,
@@ -521,11 +522,11 @@ func buildProfile(agg *Aggregated, ipType, typeTone string, typeConflict bool, p
 	p.Privacy = DimItem{Key: privacyKey(agg.ProxySignal, agg.ProxySignalCount), Label: p.Risk, Tone: p.RiskTone, Confidence: privacyConfidence(agg.ProxySignalCount), Detail: privacyDetail(agg.ProxySignalCount)}
 	p.Reputation = DimItem{Key: reputationKey(signalRisk), Label: reputationLabel(signalRisk), Tone: reputationTone(signalRisk), Detail: reputationDetail(signalRisk)}
 	p.Classification = map[string]DimItem{
-		"ip_source":     {Label: p.Native, Tone: p.NativeTone, Detail: classificationSourceDetail(agg)},
-		"ip_attribute":  {Label: p.Primary, Tone: p.PrimaryTone, Detail: networkDetail},
+		"ip_source":      {Label: p.Native, Tone: p.NativeTone, Detail: classificationSourceDetail(agg)},
+		"ip_attribute":   {Label: p.Primary, Tone: p.PrimaryTone, Detail: networkDetail},
 		"access_network": {Label: p.AccessNetwork.Label, Tone: typeTone, Detail: networkDetail},
-		"proxy_status":  {Label: p.Risk, Tone: p.RiskTone, Detail: privacyDetail(agg.ProxySignalCount)},
-		"blacklist":     {Label: "未检出滥用记录（P2 接入 RBL 后启用）", Tone: "good", Detail: "邮件黑名单检测将在下一阶段启用"},
+		"proxy_status":   {Label: p.Risk, Tone: p.RiskTone, Detail: privacyDetail(agg.ProxySignalCount)},
+		"blacklist":      {Label: "未检出滥用记录（P2 接入 RBL 后启用）", Tone: "good", Detail: "邮件黑名单检测将在下一阶段启用"},
 	}
 	return p
 }
@@ -692,7 +693,7 @@ func formatPurityReport(r *PurityReport) string {
 		{"建议", r.Recommendation},
 	}
 	if r.CountryCode != "" {
-		rows[3] = [2]string{"归属地", strings.TrimSpace(r.Country + " " + r.Region + " " + r.City) + " (" + r.CountryCode + ")"}
+		rows[3] = [2]string{"归属地", strings.TrimSpace(r.Country+" "+r.Region+" "+r.City) + " (" + r.CountryCode + ")"}
 	}
 	maxW := 0
 	for _, row := range rows {
@@ -722,11 +723,11 @@ type purityCheckRequest struct {
 }
 
 type purityCheckResponse struct {
-	OK          bool             `json:"ok"`
-	RunID       string           `json:"run_id"`
-	InputErrors []inputError     `json:"input_errors"`
-	RunErrors   []string         `json:"run_errors"`
-	Reports     []*PurityReport  `json:"reports"`
+	OK          bool            `json:"ok"`
+	RunID       string          `json:"run_id"`
+	InputErrors []inputError    `json:"input_errors"`
+	RunErrors   []string        `json:"run_errors"`
+	Reports     []*PurityReport `json:"reports"`
 }
 
 type inputError struct {
