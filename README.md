@@ -54,8 +54,8 @@
 ipw-cn/
 ├── main.go                  # Go 后端入口（Gin 框架）
 ├── go.mod                   # Go 模块定义（ipchk-cn）
-├── Dockerfile               # 后端镜像（多阶段编译）
-├── Dockerfile.frontend      # 前端镜像（源码构建）
+├── Dockerfile.backend        # 后端镜像（多阶段编译）
+├── Dockerfile.frontend       # 前端镜像（源码构建）
 ├── docker-compose.yml       # Docker Compose 编排
 ├── setting.json             # 后端运行配置
 ├── deploy/
