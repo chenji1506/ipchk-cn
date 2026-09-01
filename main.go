@@ -2231,7 +2231,7 @@ func ipPropertiesOf(ip string, asn int, org string) []string {
 
 // isPrivateAddr 私有地址判断
 func isPrivateAddr(ip string) bool {
-	if strings.HasPrefix(ip, "192.168.") || strings.HasPrefix(ip, "10.") {
+	if strings.HasPrefix(ip, "127.") || strings.HasPrefix(ip, "192.168.") || strings.HasPrefix(ip, "10.") {
 		return true
 	}
 	if strings.HasPrefix(ip, "172.") {
@@ -2244,8 +2244,44 @@ func isPrivateAddr(ip string) bool {
 	}
 	return ip == "::1" || strings.HasPrefix(ip, "fe80:")
 }
+
+// fetchPublicIP 查询服务器出网公网 IP（多源 failover）
+func fetchPublicIP() string {
+	dialer := &net.Dialer{Timeout: 5 * time.Second, KeepAlive: 30 * time.Second}
+	client := &http.Client{
+		Timeout: 8 * time.Second,
+		Transport: &http.Transport{
+			DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+				return dialer.DialContext(ctx, "tcp4", addr) // 强制 IPv4（服务器无公网 IPv6）
+			},
+		},
+	}
+	urls := []string{"https://api.ip.sb/ip", "https://api.ipify.org", "https://ifconfig.me/ip"}
+	for _, u := range urls {
+		resp, err := client.Get(u)
+		if err != nil {
+			continue
+		}
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 64))
+		resp.Body.Close()
+		if resp.StatusCode == 200 {
+			ip := strings.TrimSpace(string(body))
+			if net.ParseIP(ip) != nil {
+				return ip
+			}
+		}
+	}
+	return ""
+}
+
 func clientIPHandler(c *gin.Context) {
 	ip := c.ClientIP()
+	// 内网 IP 时改查服务器出网公网 IP（同一 NAT 下即用户的公网出口 IP）
+	if isPrivateAddr(ip) {
+		if pub := fetchPublicIP(); pub != "" {
+			ip = pub
+		}
+	}
 	c.String(http.StatusOK, ip+"\n")
 }
 func dnsQueryHandler(c *gin.Context) {
