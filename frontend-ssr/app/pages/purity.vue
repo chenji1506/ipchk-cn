@@ -4,7 +4,7 @@ import { ref, computed, onMounted } from 'vue';
 useHead({
   title: 'IP纯净度检测工具 | IP风险评分 | ipchk.cn',
   meta: [
-    { name: 'description', content: '批量检测 IP 纯净度、归属类型、代理风险、邮件黑名单与网络质量，多源证据交叉验证。' },
+    { name: 'description', content: '批量检测 IP 纯净度、归属类型、代理风险与网络质量，多源证据交叉验证。' },
     { name: 'keywords', content: 'ip纯净度,ip风险检测,ip评分,代理检测,vpn检测,数据中心检测,黑名单检测' },
   ],
 });
@@ -175,15 +175,6 @@ function rankScoreTone(score: number): string {
   return 'bad';
 }
 
-function rblText(r: PurityReport): string {
-  if (!r.rbl?.probed) return '未启用';
-  if (r.rbl.query_limited) return '查询受限';
-  if (r.rbl.listed_count > 0 || r.rbl.network_listed_count > 0) {
-    return `命中 ${r.rbl.listed_count} 单 IP / ${r.rbl.network_listed_count} 网段`;
-  }
-  return '未检出';
-}
-
 async function copyIP(ip: string) {
   try {
     await navigator.clipboard.writeText(ip);
@@ -199,7 +190,7 @@ onMounted(() => {
   <div class="title">
     <header>
       <h1>IP 纯净度检测</h1>
-      <p>批量检测 IP 纯净度 · 归属类型 · 代理风险 · 邮件黑名单 · 网络质量</p>
+      <p>批量检测 IP 纯净度 · 归属类型 · 代理风险 · 网络质量</p>
     </header>
   </div>
 
@@ -344,12 +335,6 @@ onMounted(() => {
                 <span class="p-label">代理状态</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.profile?.risk_tone) }">{{ currentReport.profile?.risk }}</span>
               </div>
-              <div class="profile-row">
-                <span class="p-label">邮件黑名单</span>
-                <span class="p-value" :style="{ color: toneColor(currentReport.rbl?.probed ? (currentReport.rbl.listed_count > 0 ? 'bad' : 'good') : 'neutral') }">
-                  {{ rblText(currentReport) }}
-                </span>
-              </div>
             </div>
             <div class="tag-list">
               <span v-for="(t, i) in currentReport.profile?.tags || []" :key="i" class="tag" :style="{ color: toneColor(t.tone), borderColor: toneColor(t.tone) }">{{ t.label }}</span>
@@ -396,14 +381,6 @@ onMounted(() => {
               <div class="quality-row"><span>P95 延迟</span><b>{{ currentReport.stability.p95_latency_ms.toFixed(1) }} ms</b></div>
             </div>
             <p v-else class="quality-empty">稳定性探测未启用</p>
-          </section>
-          <section class="detail-section">
-            <h4>邮件黑名单（RBL）</h4>
-            <div class="quality-grid">
-              <div class="quality-row"><span>单 IP 命中</span><b :style="{ color: currentReport.rbl.listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.listed_count }}</b></div>
-              <div class="quality-row"><span>上游网段命中</span><b :style="{ color: currentReport.rbl.network_listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.network_listed_count }}</b></div>
-              <div class="quality-row"><span>DNS 泄漏</span><b :style="{ color: currentReport.dns_leak?.dns_leak_suspected ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.dns_leak?.dns_leak_suspected ? '疑似' : '未发现' }}</b></div>
-            </div>
           </section>
         </div>
       </div>
