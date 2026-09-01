@@ -1,3 +1,21 @@
+# =====================================================================
+# ipchk.cn IP 工具箱 - Docker Compose 部署配置
+#
+# 环境变量说明（可通过 .env 文件或启动命令覆盖，换域名无需重新 build）：
+#
+#   API_BASE        前端调后端 API 的地址基址（默认指向后端 8080）
+#   SITE_URL        站点主域名（SEO canonical / OG 标签 / sitemap 用）
+#   V4_API          强制 IPv4 出口查询接口（首页探测本机 IPv4）
+#   V6_API          强制 IPv6 出口查询接口（首页探测本机 IPv6）
+#   DUALSTACK_API   双栈出口查询接口（IPv4/IPv6 自动判断）
+#   IPDB            是否下载本地 IP 数据库（海外 VPS 建议 true）
+#
+# 用法示例：
+#   # 本地/内网部署（默认）
+#   docker compose up -d
+#   # 生产部署（换域名 + 开启数据库）
+#   SITE_URL=https://新域名/ API_BASE=https://新域名/ IPDB=true docker compose up -d
+# =====================================================================
 services:
   backend:
     build:
@@ -9,9 +27,13 @@ services:
     volumes:
       - ./ipdb-files:/app/tmp
     environment:
+      # 阻止查询内网/私有 IP（SSRF 防护，保持 true）
       - BLOCK_PRIVATE_IPS=true
+      # 后端监听端口（默认 8080）
       - PORTS=8080
-      # 本地默认 false（跳过数据库下载，purity 走在线源）；生产部署设 IPDB=true
+      # 是否下载本地 IP 数据库（ip2region/qqwry/GeoIP 等，约 200MB）
+      #   false = 跳过下载，IP 查询走在线 API（适合内网/快速启动）
+      #   true  = 下载本地库，归属地等接口有离线兜底（适合海外 VPS）
       - IPDB=${IPDB:-false}
     restart: unless-stopped
 
@@ -23,14 +45,20 @@ services:
     container_name: ipw-frontend
     network_mode: host
     environment:
-      # 后端 API 地址：启动时通过 API_BASE 变量指定，无需重新 build。
-      # 本地默认 http://127.0.0.1:8080/，生产改 https://ipchk.cn/
+      # 后端 API 地址：前端页面调用后端接口的基址
+      #   内网部署：http://服务器内网IP:8080/（如 http://192.168.1.72:8080/）
+      #   生产部署：https://域名/（如 https://ipchk.cn/）
       - NUXT_PUBLIC_API_BASE=${API_BASE:-http://192.168.1.72:8080/}
-      # 域名配置：换域名时通过变量注入，无需重新 build
+      # 站点主域名：SEO canonical 标签、og:image、sitemap 等使用
       - NUXT_PUBLIC_SITE_URL=${SITE_URL:-https://ipchk.cn/}
+      # 强制 IPv4 出口查询接口：首页探测用户 IPv4 出口地址用
+      #   （单栈服务器可指向主域，双栈可用 4.子域名 强制走 A 记录）
       - NUXT_PUBLIC_V4_API=${V4_API:-https://4.ipchk.cn/ip}
+      # 强制 IPv6 出口查询接口：首页探测用户 IPv6 出口地址用
       - NUXT_PUBLIC_V6_API=${V6_API:-https://6.ipchk.cn/ip}
+      # 双栈出口查询接口：自动判断 IPv4/IPv6 的查询入口
       - NUXT_PUBLIC_DUALSTACK_API=${DUALSTACK_API:-https://ipchk.cn/ip}
+      # 前端监听端口（默认 3000）
       - PORT=3000
     depends_on:
       - backend
