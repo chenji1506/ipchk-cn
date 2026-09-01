@@ -10,6 +10,7 @@ const route = useRoute();
 const activeMenu = computed(() => {
   const p = route.path;
   if (p === '/purity') return '1';
+  if (p === '/rbl' || p.startsWith('/rbl')) return '5';
   if (p.startsWith('/ipv6webcheck')) return '2-0';
   if (p === '/location' || p === '/ipv6' || p.startsWith('/location?') || p.startsWith('/ipv6?')) return '2-1';
   if (p.startsWith('/ipv6tcping')) return '2-2';
@@ -83,6 +84,9 @@ useHead({
         <router-link to="/purity" style="font-size: 1em;">
           <p style="display: inline-block; margin-left: 10px">IP纯净度检测</p>
         </router-link>
+        <router-link to="/rbl" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">邮件黑名单检测</p>
+        </router-link>
       </div>
       <div class="drawer-section">
         <p class="drawer-title">IPv6 工具箱</p>
@@ -139,6 +143,12 @@ useHead({
     <el-menu-item index="1" v-if="!isNarrow">
       <router-link to="/purity" style="font-size: 1em;">
         <p style="display: inline-block; margin-left: 10px">IP纯净度检测</p>
+      </router-link>
+    </el-menu-item>
+
+    <el-menu-item index="5" v-if="!isNarrow">
+      <router-link to="/rbl" style="font-size: 1em;">
+        <p style="display: inline-block; margin-left: 10px">邮件黑名单检测</p>
       </router-link>
     </el-menu-item>
 

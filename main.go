@@ -2284,6 +2284,28 @@ func clientIPHandler(c *gin.Context) {
 	}
 	c.String(http.StatusOK, ip+"\n")
 }
+
+// rblHandler 邮件黑名单检测（独立端点，返回 16 个 DNSBL 源的逐个状态）
+func rblHandler(c *gin.Context) {
+	ip := c.Param("ip")
+	if ip == "" {
+		ip = c.ClientIP()
+	}
+	if net.ParseIP(ip) == nil {
+		writeJSON(c, gin.H{"error": "invalid IP address", "ip": ip})
+		return
+	}
+	r := queryRBL(ip)
+	if r == nil {
+		writeJSON(c, gin.H{"error": "RBL 查询失败", "ip": ip})
+		return
+	}
+	if isCLIUA(c.GetHeader("User-Agent")) {
+		c.String(http.StatusOK, formatRBLText(r))
+		return
+	}
+	writeJSON(c, r)
+}
 func dnsQueryHandler(c *gin.Context) {
 
 	domain := c.Param("domain")
@@ -2566,6 +2588,8 @@ func main() {
 
 	r.GET("/", healchCheck)
 	r.GET("/ip", clientIPHandler)
+	r.GET("/v1/rbl/:ip", rblHandler)
+	r.GET("/v1/rbl", rblHandler)
 
 	// 以下路由无条件注册：IPDB 开关只控制本地数据库下载（见上面的 ipdb.Init），
 	// 不影响路由可用性。数据源未初始化时 ipdb.SearchIP 返回 "not loaded" 而非 panic，

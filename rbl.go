@@ -49,17 +49,27 @@ var rblZones = []rblZone{
 // ============ 结果结构 ============
 
 type RBLResult struct {
-	ListedCount        int      `json:"listed_count"`
-	NetworkListedCount int      `json:"network_listed_count"`
-	RiskLevel          string   `json:"risk_level"`
-	QueryLimited       bool     `json:"query_limited"`
-	Probed             bool     `json:"probed"`
-	ListedZones        []string `json:"listed_zones,omitempty"`
-	NetworkZones       []string `json:"network_zones,omitempty"`
-	WhiteListed        bool     `json:"white_listed"`
-	CheckedCount       int      `json:"checked_count"`
+	IP                 string          `json:"ip"`
+	ListedCount        int             `json:"listed_count"`
+	NetworkListedCount int             `json:"network_listed_count"`
+	RiskLevel          string          `json:"risk_level"`
+	QueryLimited       bool            `json:"query_limited"`
+	Probed             bool            `json:"probed"`
+	ListedZones        []string        `json:"listed_zones,omitempty"`
+	NetworkZones       []string        `json:"network_zones,omitempty"`
+	WhiteListed        bool            `json:"white_listed"`
+	CheckedCount       int             `json:"checked_count"`
+	Zones              []RBLZoneResult `json:"zones,omitempty"`
 
 	probedAt time.Time
+}
+
+// RBLZoneResult 单个 DNSBL 源的查询状态
+type RBLZoneResult struct {
+	Name      string `json:"name"`
+	Listed    bool   `json:"listed"`
+	Whitelist bool   `json:"whitelist"`
+	Status    string `json:"status"` // listed / clean / failed
 }
 
 // ============ 缓存 ============
@@ -98,20 +108,21 @@ func queryRBL(ip string) *RBLResult {
 	return nil
 }
 
-// checkRBL 对单 IP 执行 13 源 DNSBL 查询 + spamhaus 网段查询
+// checkRBL 对单 IP 执行 16 源 DNSBL 查询 + spamhaus 网段查询
 func checkRBL(ip string) *RBLResult {
 	parsed := net.ParseIP(ip)
 	if parsed == nil {
-		return &RBLResult{Probed: true, QueryLimited: true}
+		return &RBLResult{IP: ip, Probed: true, QueryLimited: true}
 	}
 	reversed := reverseIP(parsed)
 
-	res := &RBLResult{Probed: true}
+	res := &RBLResult{IP: ip, Probed: true}
 	// 并行查询全部单 IP 源
 	type queryResult struct {
 		name  string
 		white bool
 		hit   bool
+		ok    bool
 	}
 	results := make([]queryResult, len(rblZones))
 	var wg sync.WaitGroup
@@ -121,26 +132,27 @@ func checkRBL(ip string) *RBLResult {
 			defer wg.Done()
 			q := reversed + "." + zone.name
 			hit, ok := dnsblLookup(q)
-			if ok {
-				results[idx] = queryResult{zone.name, zone.white, hit}
-			}
+			results[idx] = queryResult{zone.name, zone.white, hit, ok}
 		}(i, z)
 	}
 	wg.Wait()
 
 	for _, r := range results {
-		if r.name == "" {
-			continue // 查询失败（超时/网络错误）
-		}
-		res.CheckedCount++
-		if r.hit {
-			if r.white {
-				res.WhiteListed = true
-			} else {
-				res.ListedCount++
-				res.ListedZones = append(res.ListedZones, r.name)
+		status := "failed"
+		if r.ok {
+			res.CheckedCount++
+			status = "clean"
+			if r.hit {
+				status = "listed"
+				if r.white {
+					res.WhiteListed = true
+				} else {
+					res.ListedCount++
+					res.ListedZones = append(res.ListedZones, r.name)
+				}
 			}
 		}
+		res.Zones = append(res.Zones, RBLZoneResult{Name: r.name, Listed: r.hit, Whitelist: r.white, Status: status})
 	}
 
 	// 网段查询（仅 spamhaus zen，支持 /24 网段记录）
@@ -309,4 +321,53 @@ func dnsblDoH(domain string) (hit bool, ok bool) {
 		}
 	}
 	return false, true
+}
+
+// formatRBLText 邮件黑名单 CLI 格式化输出
+func formatRBLText(r *RBLResult) string {
+	var b strings.Builder
+	b.WriteString("邮件黑名单检测: " + r.IP + "\n")
+	b.WriteString(strings.Repeat("─", 46) + "\n")
+	riskLabel := "无"
+	switch r.RiskLevel {
+	case "high":
+		riskLabel = "高"
+	case "medium":
+		riskLabel = "中"
+	case "low":
+		riskLabel = "低"
+	}
+	rows := [][2]string{
+		{"检查源数", fmt.Sprintf("%d", r.CheckedCount)},
+		{"单 IP 命中", fmt.Sprintf("%d", r.ListedCount)},
+		{"网段命中", fmt.Sprintf("%d", r.NetworkListedCount)},
+		{"白名单命中", boolToStr(r.WhiteListed)},
+		{"风险等级", riskLabel},
+	}
+	maxW := 0
+	for _, row := range rows {
+		if w := displayWidth(row[0]); w > maxW {
+			maxW = w
+		}
+	}
+	for _, row := range rows {
+		b.WriteString(padKey(row[0], maxW+2) + ": " + row[1] + "\n")
+	}
+	b.WriteString(strings.Repeat("─", 46) + "\n")
+	b.WriteString("各源状态:\n")
+	for _, z := range r.Zones {
+		status := "未命中"
+		switch z.Status {
+		case "listed":
+			status = "已命中"
+		case "failed":
+			status = "查询失败"
+		}
+		if z.Whitelist {
+			status = "白名单"
+		}
+		b.WriteString("  " + padKey(z.Name, 34) + status + "\n")
+	}
+	b.WriteString(strings.Repeat("─", 46))
+	return b.String()
 }
