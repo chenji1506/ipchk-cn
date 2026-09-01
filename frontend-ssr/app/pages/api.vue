@@ -28,6 +28,18 @@ const endpoints = [
     example: 'curl https://ipchk.cn/v1/purity/8.8.8.8',
   },
   {
+    method: 'POST', path: '/v1/purity/check', desc: '批量 IP 纯净度检测（最多 10 个）',
+    example: 'curl -X POST https://ipchk.cn/v1/purity/check -H "Content-Type: application/json" -d \'{"ips":["8.8.8.8","1.1.1.1"]}\'',
+  },
+  {
+    method: 'GET', path: '/v1/rbl', desc: '查询本机 IP 邮件黑名单（16 个 DNSBL 源）',
+    example: 'curl https://ipchk.cn/v1/rbl',
+  },
+  {
+    method: 'GET', path: '/v1/rbl/:ip', desc: '查询指定 IP 邮件黑名单（16 个 DNSBL 源）',
+    example: 'curl https://ipchk.cn/v1/rbl/8.8.8.8',
+  },
+  {
     method: 'GET', path: '/v1/card/:ip', desc: '生成 IP 信息卡片图（SVG）',
     example: 'curl https://ipchk.cn/v1/card/8.8.8.8',
   },
@@ -67,7 +79,7 @@ const endpoints = [
   </div>
   <div class="content">
     <div class="notice-card">
-      所有接口支持 <b>GET</b> 请求，返回 JSON（<code>/ip</code> 返回纯文本）。命令行访问归属地/纯净度接口自动返回格式化文本。
+      所有接口返回结构化 JSON（<code>/ip</code> 返回纯文本，<code>/v1/card</code> 返回 SVG 卡片图）。命令行访问归属地/纯净度/黑名单接口自动返回格式化文本。批量检测接口 <code>/v1/purity/check</code> 使用 <b>POST</b>。
     </div>
 
     <table class="result-table">
@@ -80,7 +92,7 @@ const endpoints = [
       </thead>
       <tbody>
         <tr v-for="(ep, i) in endpoints" :key="i">
-          <td class="table-value"><span class="method method-get">{{ ep.method }}</span></td>
+          <td class="table-value"><span class="method" :class="ep.method === 'POST' ? 'method-post' : 'method-get'">{{ ep.method }}</span></td>
           <td class="table-value"><code class="path">{{ ep.path }}</code></td>
           <td class="table-value">{{ ep.desc }}</td>
         </tr>
@@ -88,7 +100,7 @@ const endpoints = [
     </table>
 
     <h3 class="example-title">使用示例</h3>
-    <div v-for="(ep, i) in endpoints.slice(0, 4)" :key="'ex' + i" class="example-block">
+    <div v-for="(ep, i) in endpoints.slice(0, 8)" :key="'ex' + i" class="example-block">
       <div class="example-desc">{{ ep.desc }}</div>
       <pre><code>{{ ep.example }}</code></pre>
     </div>
@@ -114,6 +126,16 @@ const endpoints = [
   border-radius: 4px;
   background: rgba(62, 175, 124, 0.15);
   color: #3EAF7C;
+  font-weight: 700;
+  font-size: 0.85em;
+}
+
+.method-post {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: rgba(230, 162, 60, 0.15);
+  color: #E6A23C;
   font-weight: 700;
   font-size: 0.85em;
 }
