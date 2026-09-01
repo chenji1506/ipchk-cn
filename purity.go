@@ -196,7 +196,7 @@ func toneOf(t string) string {
 
 // ============ 评分主函数 ============
 
-func buildPurityReport(ip string, agg *Aggregated) *PurityReport {
+func buildPurityReport(ip string, agg *Aggregated, rbl *RBLResult, stab *StabilityResult) *PurityReport {
 	r := &PurityReport{IP: ip}
 	r.Profile.DefinitionNote = "IP来源、IP属性、接入网络、代理状态和邮件黑名单是五个独立维度，不能互相替代。"
 
@@ -248,6 +248,19 @@ func buildPurityReport(ip string, agg *Aggregated) *PurityReport {
 	if typeConflict {
 		signalRisk += 10
 		reasons = append(reasons, "住宅、商业或机房属性判断存在明显冲突")
+	}
+	// RBL 邮件黑名单命中（P2）
+	if rbl != nil && rbl.Probed && (rbl.ListedCount > 0 || rbl.NetworkListedCount > 0) {
+		signalRisk += rblSignalRisk(rbl)
+		if rbl.ListedCount > 0 {
+			reasons = append(reasons, fmt.Sprintf("命中 %d 个邮件黑名单（%s）", rbl.ListedCount, strings.Join(rbl.ListedZones, "、")))
+		}
+		if rbl.NetworkListedCount > 0 {
+			reasons = append(reasons, fmt.Sprintf("上游网段命中 %d 个黑名单（%s）", rbl.NetworkListedCount, strings.Join(rbl.NetworkZones, "、")))
+		}
+	}
+	if rbl != nil && rbl.Probed && rbl.WhiteListed {
+		reasons = append(reasons, "命中邮件白名单（list.dnswl.org）")
 	}
 
 	// ---- identity_risk（归属一致性风险） ----
@@ -326,12 +339,13 @@ func buildPurityReport(ip string, agg *Aggregated) *PurityReport {
 	label, tone := purityLabelOf(purityScore)
 	confidence, confidenceLabel := confidenceOf(okCount)
 
-	// ---- 数据质量与稳定性（P1） ----
+	// ---- 数据质量与稳定性 ----
 	dataQuality := int(float64(okCount)/float64(agg.ExpectedSource)*10 + 0.5)
 	if dataQuality > 10 {
 		dataQuality = 10
 	}
-	stabilityScore := 10 // P1 未探测的中性值，P2 接入真实 TCP 探测
+	stabilityScore := stabilityDimensionScore(stab)
+	rblScore := rblDimensionScore(rbl)
 
 	// ---- 综合分 ----
 	score := int(float64(purityScore)*0.85 + float64(stabilityScore)*0.10 + float64(dataQuality)*0.05 + 0.5)
@@ -370,12 +384,12 @@ func buildPurityReport(ip string, agg *Aggregated) *PurityReport {
 	r.Dimensions = map[string]Dimension{
 		"reputation":   {Score: repScore, MaxScore: 35},
 		"consistency":  {Score: consistencyScore, MaxScore: 20},
-		"rbl":          {Score: 0, MaxScore: 20}, // P2 接入
+		"rbl":          {Score: rblScore, MaxScore: 20},
 		"stability":    {Score: stabilityScore, MaxScore: 15},
 		"data_quality": {Score: dataQuality, MaxScore: 10},
 	}
-	r.Stability = StabilityDetail{Probed: false}
-	r.RBL = RBLDetail{RiskLevel: "unknown", Probed: false}
+	r.Stability = stabilityToDetail(stab)
+	r.RBL = rblToDetail(rbl)
 	r.DNSLeak = DNSLeakDetail{DNSLeakSuspected: false}
 	r.MainReasons = reasons
 
@@ -651,6 +665,18 @@ func formatPurityReport(r *PurityReport) string {
 	var b strings.Builder
 	b.WriteString("IP 纯净度检测: " + r.IP + "\n")
 	b.WriteString(strings.Repeat("─", 46) + "\n")
+	rblText := "未检出"
+	if !r.RBL.Probed {
+		rblText = "未启用"
+	} else if r.RBL.QueryLimited {
+		rblText = "查询受限"
+	} else if r.RBL.ListedCount > 0 || r.RBL.NetworkListedCount > 0 {
+		rblText = fmt.Sprintf("%d 命中 / %d 网段命中", r.RBL.ListedCount, r.RBL.NetworkListedCount)
+	}
+	latencyText := "—"
+	if r.Stability.Probed && r.Stability.P95LatencyMs > 0 {
+		latencyText = fmt.Sprintf("%.2f ms（成功 %.0f%%）", r.Stability.P95LatencyMs, r.Stability.SuccessRate*100)
+	}
 	rows := [][2]string{
 		{"综合质量分", fmt.Sprintf("%d / 100  (纯净度85%% 网络10%% 数据5%%)", r.Score)},
 		{"IP 纯净度", fmt.Sprintf("%d · %s（%s）", r.Purity.Score, r.Purity.Label, r.Purity.ConfidenceLabel)},
@@ -659,8 +685,9 @@ func formatPurityReport(r *PurityReport) string {
 		{"ASN", r.AsOrganization},
 		{"公开风险", fmt.Sprintf("%d", r.Purity.SignalRisk)},
 		{"归属风险", fmt.Sprintf("%d", r.Purity.IdentityRisk)},
+		{"RBL 黑名单", rblText},
+		{"P95 延迟", latencyText},
 		{"覆盖扣分", fmt.Sprintf("%d（覆盖上限 %d）", r.Purity.UncertaintyDeduction, r.Purity.CoverageCeiling)},
-		{"RBL", "P2 阶段启用"},
 		{"数据来源", r.Source},
 		{"建议", r.Recommendation},
 	}
@@ -753,12 +780,12 @@ func purityCheck(ips []string) purityCheckResponse {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			agg := queryAggregated(ip)
+			agg, rbl, stab := queryPurityInputs(ip)
 			if agg == nil {
 				results[idx] = result{ip, nil}
 				return
 			}
-			rep := buildPurityReport(ip, agg)
+			rep := buildPurityReport(ip, agg, rbl, stab)
 			results[idx] = result{ip, rep}
 		}(i, ip)
 	}
@@ -790,4 +817,47 @@ func sortReportsByScoreDesc(reports []*PurityReport) {
 		}
 		return reports[i].IP < reports[j].IP
 	})
+}
+
+// stabilityToDetail 稳定性结果 → 响应结构
+func stabilityToDetail(s *StabilityResult) StabilityDetail {
+	if s == nil {
+		return StabilityDetail{Probed: false}
+	}
+	return StabilityDetail{
+		SuccessRate:  s.SuccessRate,
+		AvgLatencyMs: s.AvgLatencyMs,
+		P50LatencyMs: s.P50LatencyMs,
+		P95LatencyMs: s.P95LatencyMs,
+		TimeoutCount: s.TimeoutCount,
+		Probed:       s.Probed,
+	}
+}
+
+// rblToDetail RBL 结果 → 响应结构
+func rblToDetail(r *RBLResult) RBLDetail {
+	if r == nil {
+		return RBLDetail{RiskLevel: "unknown", Probed: false}
+	}
+	return RBLDetail{
+		ListedCount:        r.ListedCount,
+		NetworkListedCount: r.NetworkListedCount,
+		RiskLevel:          r.RiskLevel,
+		QueryLimited:       r.QueryLimited,
+		Probed:             r.Probed,
+	}
+}
+
+// queryPurityInputs 并行查询三大数据源（聚合 / RBL / 稳定性），各自带缓存
+func queryPurityInputs(ip string) (*Aggregated, *RBLResult, *StabilityResult) {
+	var agg *Aggregated
+	var rbl *RBLResult
+	var stab *StabilityResult
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() { defer wg.Done(); agg = queryAggregated(ip) }()
+	go func() { defer wg.Done(); rbl = queryRBL(ip) }()
+	go func() { defer wg.Done(); stab = queryStability(ip) }()
+	wg.Wait()
+	return agg, rbl, stab
 }

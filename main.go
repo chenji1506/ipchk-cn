@@ -1873,7 +1873,9 @@ func purityHandler(c *gin.Context) {
 		writeJSON(c, gin.H{"error": "数据源全部不可用", "ip": ip})
 		return
 	}
-	rep := buildPurityReport(ip, agg)
+	rbl := queryRBL(ip)
+	stab := queryStability(ip)
+	rep := buildPurityReport(ip, agg, rbl, stab)
 	if isCLIUA(c.GetHeader("User-Agent")) {
 		c.String(http.StatusOK, formatPurityReport(rep))
 		return
