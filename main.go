@@ -2276,8 +2276,9 @@ func fetchPublicIP() string {
 
 func clientIPHandler(c *gin.Context) {
 	ip := c.ClientIP()
-	// 内网 IP 时改查服务器出网公网 IP（同一 NAT 下即用户的公网出口 IP）
-	if isPrivateAddr(ip) {
+	// 仅 IPv4 内网地址时才改查服务器出网公网 IP（fetchPublicIP 返回 IPv4）。
+	// IPv6 私有地址（::1/fe80）不触发，否则会错误返回 IPv4 而非 IPv6。
+	if isPrivateAddr(ip) && !strings.Contains(ip, ":") {
 		if pub := fetchPublicIP(); pub != "" {
 			ip = pub
 		}
