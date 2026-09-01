@@ -2525,19 +2525,22 @@ func main() {
 
 	r.GET("/", healchCheck)
 	r.GET("/ip", clientIPHandler)
-	if IPDB != "false" {
-		r.GET("/v1/location/:ip", locateIP)
-		r.GET("/v1/location", locateUserIP)
-		r.GET("/v1/purity/:ip", purityHandler)
-		r.GET("/v1/purity", purityHandler)
-		r.POST("/v1/purity/check", purityCheckHandler)
-		r.GET("/v1/card/:ip", ipCardHandler)
-		r.GET("/v1/card", ipCardHandler)
-		r.GET("/v1/scan/:ip", portScanHandler)
-		r.GET("/v1/whois/:target", whoisHandler)
-		r.GET("/v1/logs", logsHandler)
-		r.GET("/v1/analytics", analyticsHandler)
-	}
+
+	// 以下路由无条件注册：IPDB 开关只控制本地数据库下载（见上面的 ipdb.Init），
+	// 不影响路由可用性。数据源未初始化时 ipdb.SearchIP 返回 "not loaded" 而非 panic，
+	// purity 等接口走在线 API，IPDB=false 时依然可用。
+	r.GET("/v1/location/:ip", locateIP)
+	r.GET("/v1/location", locateUserIP)
+	r.GET("/v1/purity/:ip", purityHandler)
+	r.GET("/v1/purity", purityHandler)
+	r.POST("/v1/purity/check", purityCheckHandler)
+	r.GET("/v1/card/:ip", ipCardHandler)
+	r.GET("/v1/card", ipCardHandler)
+	r.GET("/v1/scan/:ip", portScanHandler)
+	r.GET("/v1/whois/:target", whoisHandler)
+	r.GET("/v1/logs", logsHandler)
+	r.GET("/v1/analytics", analyticsHandler)
+
 	if err := r.Run(":" + PORTS); err != nil {
 		slog.Error("Server failed to start", "error", err)
 	}
