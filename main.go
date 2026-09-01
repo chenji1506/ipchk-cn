@@ -1859,55 +1859,71 @@ func purityHandler(c *gin.Context) {
 	if ip == "" {
 		ip = c.ClientIP()
 	}
-	data := queryIPLocation(ip)
-	if data == nil {
-		data = ipdb.SearchIP(ip)
+	agg := queryAggregated(ip)
+	if agg == nil || len(agg.Sources) == 0 {
+		// 全部数据源不可用：走旧逻辑兜底（本地 ipdb + 静态评分）
+		data := queryIPLocation(ip)
+		if data == nil {
+			data = ipdb.SearchIP(ip)
+		}
+		if data != nil {
+			legacyPurityResponse(c, ip, data)
+			return
+		}
+		writeJSON(c, gin.H{"error": "数据源全部不可用", "ip": ip})
+		return
 	}
+	rep := buildPurityReport(ip, agg)
+	if isCLIUA(c.GetHeader("User-Agent")) {
+		c.String(http.StatusOK, formatPurityReport(rep))
+		return
+	}
+	writeJSON(c, rep)
+}
 
+// purityCheckHandler POST /v1/purity/check 批量检测
+func purityCheckHandler(c *gin.Context) {
+	var req purityCheckRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		writeJSON(c, gin.H{"ok": false, "error": "invalid request body"})
+		return
+	}
+	if len(req.IPs) == 0 {
+		writeJSON(c, gin.H{"ok": false, "error": "no IP addresses provided"})
+		return
+	}
+	resp := purityCheck(req.IPs)
+	writeJSON(c, resp)
+}
+
+// legacyPurityResponse 数据源全挂时的旧格式兜底响应
+func legacyPurityResponse(c *gin.Context, ip string, data map[string]interface{}) {
 	get := func(k string) string {
 		if v, ok := data[k]; ok && v != nil {
 			return strings.TrimSpace(strval(v))
 		}
 		return ""
 	}
-
-	// 提取 ASN（"AS15169 Google LLC" → 15169）
 	asn := parseASN(get("as"))
 	countryCode := strings.ToUpper(get("country_code"))
-	country := get("country")
-	region := get("region")
-	city := get("city")
-	isp := get("isp")
 	org := get("org")
 	asOrg := get("as")
 	if asOrg == "" {
 		asOrg = org
 	}
-
 	fraudScore := calculateFraudScore(ip, asn, countryCode, org)
-	cfScore := calculateCloudflareCoefficient(fraudScore, asn, countryCode)
-	ipSource := ipSourceOf(asn, ip, org)
-	properties := ipPropertiesOf(ip, asn, org)
-
 	result := map[string]interface{}{
-		"ip":                    ip,
-		"asn":                   asn,
-		"asOrganization":        asOrg,
-		"country":               country,
-		"countryCode":           countryCode,
-		"region":                region,
-		"city":                  city,
-		"isp":                   isp,
-		"fraudScore":            fraudScore,
-		"ippureCoefficient":     fraudScore,
-		"cloudflareCoefficient": cfScore,
+		"ip": ip, "asn": asn, "asOrganization": asOrg,
+		"country": get("country"), "countryCode": countryCode,
+		"region": get("region"), "city": get("city"), "isp": get("isp"),
+		"fraudScore": fraudScore, "ippureCoefficient": fraudScore,
+		"cloudflareCoefficient": calculateCloudflareCoefficient(fraudScore, asn, countryCode),
 		"riskLevel":             riskLevelOf(fraudScore),
-		"ipSource":              ipSource,
-		"ipProperties":          properties,
+		"ipSource":              ipSourceOf(asn, ip, org),
+		"ipProperties":          ipPropertiesOf(ip, asn, org),
 		"isDataCenter":          isDataCenterIP(asn, ip, org),
 		"isResidential":         isResidentialIP(asn),
 		"isBroadcast":           isBroadcastIP(ip),
-		"userAgent":             c.GetHeader("User-Agent"),
 		"source":                get("source"),
 	}
 	if isCLIUA(c.GetHeader("User-Agent")) {
@@ -2512,6 +2528,7 @@ func main() {
 		r.GET("/v1/location", locateUserIP)
 		r.GET("/v1/purity/:ip", purityHandler)
 		r.GET("/v1/purity", purityHandler)
+		r.POST("/v1/purity/check", purityCheckHandler)
 		r.GET("/v1/card/:ip", ipCardHandler)
 		r.GET("/v1/card", ipCardHandler)
 		r.GET("/v1/scan/:ip", portScanHandler)
