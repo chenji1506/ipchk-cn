@@ -40,6 +40,10 @@ var rblZones = []rblZone{
 	{"hostkarma.junkemailfilter.com", false},
 	{"list.dnswl.org", true}, // 白名单
 	{"abuse.atlantis-eg.com", false},
+	// 二线源（补充，覆盖 mxtoolbox/blacklistalert 的额外 DNSBL）
+	{"all.spamrats.com", false},   // SpamRATS
+	{"ubl.unsubscore.com", false}, // LASHBACK
+	{"dnsbl.justspam.org", false}, // JUSTSPAMMED
 }
 
 // ============ 结果结构 ============
