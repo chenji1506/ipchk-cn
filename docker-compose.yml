@@ -26,6 +26,11 @@ services:
       # 后端 API 地址：启动时通过 API_BASE 变量指定，无需重新 build。
       # 本地默认 http://127.0.0.1:8080/，生产改 https://ipchk.cn/
       - NUXT_PUBLIC_API_BASE=${API_BASE:-http://192.168.1.72:8080/}
+      # 域名配置：换域名时通过变量注入，无需重新 build
+      - NUXT_PUBLIC_SITE_URL=${SITE_URL:-https://ipchk.cn/}
+      - NUXT_PUBLIC_V4_API=${V4_API:-https://4.ipchk.cn/ip}
+      - NUXT_PUBLIC_V6_API=${V6_API:-https://6.ipchk.cn/ip}
+      - NUXT_PUBLIC_DUALSTACK_API=${DUALSTACK_API:-https://ipchk.cn/ip}
       - PORT=3000
     depends_on:
       - backend

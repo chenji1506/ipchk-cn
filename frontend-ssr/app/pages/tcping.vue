@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 import { extractHost } from '../../utils/tools';
 
 const route = useRoute()

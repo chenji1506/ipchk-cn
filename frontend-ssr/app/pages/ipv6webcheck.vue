@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 import { CircleCheckFilled, CircleCloseFilled,InfoFilled,Position } from '@element-plus/icons-vue';
 import { extractHost, getStatusCodeClass, formatTime, formatSpeed, formatSize } from '../../utils/tools';
 

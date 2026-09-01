@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 
 useHead({
   title: '端口扫描工具 | 在线端口检测 | ipchk.cn',

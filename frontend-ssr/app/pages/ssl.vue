@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { CircleCheckFilled, CircleCloseFilled,InfoFilled } from '@element-plus/icons-vue';
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 import { extractHost, formatTime, formatSpeed, getStatusCodeClass } from '../../utils/tools';
 const route = useRoute()
 

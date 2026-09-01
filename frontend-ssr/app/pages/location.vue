@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { isIPv6 } from 'is-ip';
-import {config} from '../../config/index';
+const config = useIpchkConfig()
 import { CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router'
 import { highlightCode } from '../../utils/shiki'

@@ -2,7 +2,7 @@
 import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
 import { Moon, Sunny, Expand } from '@element-plus/icons-vue';
-import { config } from '../config/index';
+const config = useIpchkConfig()
 
 const route = useRoute();
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
 import { isIPv6 } from 'is-ip';
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 import { CircleCheckFilled, CircleCloseFilled, CopyDocument, Location, Loading, WarningFilled, InfoFilled, Monitor, Connection, Lock, Odometer, Search, List, Grid } from '@element-plus/icons-vue';
 
 // 工具快捷入口

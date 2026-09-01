@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { config } from '../../config/index';
+const config = useIpchkConfig()
 
 useHead({
   title: '批量 IP 查询 | 多IP归属地 | ipchk.cn',

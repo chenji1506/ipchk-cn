@@ -69,11 +69,15 @@ export default defineNuxtConfig({
   runtimeConfig: {
     indexnowKey: '',
     public: {
-      siteUrl: config.siteUrl,
       docConfig: docConfig,
+      // 域名配置：启动时可用 NUXT_PUBLIC_* 环境变量覆盖（无需重新 build）
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || config.siteUrl,
+      v4OnlyAPI: process.env.NUXT_PUBLIC_V4_API || config.v4OnlyAPI,
+      v6OnlyAPI: process.env.NUXT_PUBLIC_V6_API || config.v6OnlyAPI,
+      dualStackAPI: process.env.NUXT_PUBLIC_DUALSTACK_API || config.DualStackAPI,
       // API 基址：本地部署时设 NUXT_PUBLIC_API_BASE=http://127.0.0.1:8080/，
       // 生产默认 https://ipchk.cn/
-      apiBase: apiBase,
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://ipchk.cn/',
 
     },
   },

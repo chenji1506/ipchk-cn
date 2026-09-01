@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { config } from '../../config/index'
+const config = useIpchkConfig()
 import { isIPv6 } from 'is-ip'
 
 const route = useRoute()
