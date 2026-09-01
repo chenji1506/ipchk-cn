@@ -61,6 +61,7 @@ async function getUserIP(){
 }
 
 const recordTypes = [
+  { value: 'all', label: '全量记录' },
   { value: 'a', label: 'A 记录' },
   { value: 'aaaa', label: 'AAAA 记录' },
   { value: 'cname', label: 'CNAME 记录' },
@@ -186,7 +187,7 @@ const doc = page.value;
       </el-button>
     </div>
         <div class="result-section">
-        <table class="result-table" v-if="results.length > 0">
+        <table class="result-table" v-if="results.length > 0 && nowRecordType !== 'all'">
         <thead>
           <tr>
             
@@ -223,6 +224,26 @@ const doc = page.value;
         </tbody>
         
         </table>
+
+        <div v-if="nowRecordType === 'all' && results.length > 0" class="all-results">
+          <div v-for="(result, idx) in results" :key="'all-' + idx" class="all-server">
+            <div class="all-server-name">{{ result.server }}</div>
+            <table class="result-table" v-if="!result.loading && result.data">
+              <tbody>
+                <tr v-for="t in ['a','aaaa','cname','mx','ns','txt','srv','caa']" :key="t">
+                  <td class="table-label">{{ t.toUpperCase() }}</td>
+                  <td class="table-value">
+                    <template v-if="result.data[t] && result.data[t].record && result.data[t].record.length">
+                      <span v-for="(r, i) in result.data[t].record" :key="i" class="ip-address"><span>{{ r }}</span></span>
+                    </template>
+                    <span v-else style="color:#999;">—</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div v-else-if="result.loading" class="all-loading">加载中...</div>
+          </div>
+        </div>
     </div>
     <blockquote>
       <div class="visitor-ip">
@@ -252,6 +273,24 @@ const doc = page.value;
   color: #3EAF7C !important;
   font-size: 1.3em;
   text-decoration: none
+}
+
+.all-results { display: flex; flex-direction: column; gap: 16px; }
+.all-server {
+  border: 1px solid #e4e7ed;
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+html.dark .all-server { border-color: #333; }
+.all-server-name {
+  font-weight: 700;
+  font-size: 1.05em;
+  margin-bottom: 8px;
+  color: #3EAF7C;
+}
+.all-loading {
+  color: #909399;
+  padding: 8px 0;
 }
 </style>
 

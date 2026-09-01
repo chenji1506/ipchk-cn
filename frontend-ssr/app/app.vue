@@ -17,6 +17,7 @@ const activeMenu = computed(() => {
   if (p.startsWith('/dns')) return '2-3';
   if (p.startsWith('/ssl')) return '2-4';
   if (p.startsWith('/ipv6speedtest')) return '2-5';
+  if (p.startsWith('/ipv6-connectivity')) return '2-6';
   if (p.startsWith('/speedtest')) return '3-0';
   if (p.startsWith('/tcping')) return '3-1';
   if (p.startsWith('/batch')) return '4-0';
@@ -25,6 +26,9 @@ const activeMenu = computed(() => {
   if (p.startsWith('/leak')) return '4-3';
   if (p.startsWith('/cidr')) return '4-4';
   if (p.startsWith('/api')) return '4-5';
+  if (p.startsWith('/tor')) return '4-6';
+  if (p.startsWith('/security')) return '4-7';
+  if (p.startsWith('/dns-pollution')) return '4-8';
   if (p.startsWith('/doc')) return '2-1';
   return '';
 });
@@ -104,6 +108,7 @@ useHead({
           <p style="display: inline-block; margin-left: 10px">IPv6 SSL检查</p>
         </router-link>
         <a href="/ipv6speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 网站测速</p></a>
+        <router-link to="/ipv6-connectivity" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 连通性检测</p></router-link>
       </div>
       <div class="drawer-section">
         <p class="drawer-title">IPv4 工具箱</p>
@@ -118,6 +123,9 @@ useHead({
         <router-link to="/leak" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">隐私泄露检测</p></router-link>
         <router-link to="/cidr" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">子网计算器</p></router-link>
         <router-link to="/api" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">API 文档</p></router-link>
+        <router-link to="/tor" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Tor 出口检测</p></router-link>
+        <router-link to="/security" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">网站检测</p></router-link>
+        <router-link to="/dns-pollution" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">DNS 污染检测</p></router-link>
       </div>
   </el-drawer>
   <el-menu
@@ -172,6 +180,9 @@ useHead({
       <el-menu-item index="2-5">
         <router-link to="/ipv6speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 网站测速</p></router-link>
       </el-menu-item>
+      <el-menu-item index="2-6">
+        <router-link to="/ipv6-connectivity"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 连通性检测</p></router-link>
+      </el-menu-item>
     </el-sub-menu>
 
     <el-sub-menu index="3" v-if="!isNarrow">
@@ -203,6 +214,15 @@ useHead({
       </el-menu-item>
       <el-menu-item index="4-5">
         <router-link to="/api"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">API 文档</p></router-link>
+      </el-menu-item>
+      <el-menu-item index="4-6">
+        <router-link to="/tor"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Tor 出口检测</p></router-link>
+      </el-menu-item>
+      <el-menu-item index="4-7">
+        <router-link to="/security"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">网站检测</p></router-link>
+      </el-menu-item>
+      <el-menu-item index="4-8">
+        <router-link to="/dns-pollution"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">DNS 污染检测</p></router-link>
       </el-menu-item>
     </el-sub-menu>
 

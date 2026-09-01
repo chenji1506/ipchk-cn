@@ -44,6 +44,7 @@ useHead({
 interface SSLCheckResponse {
   ipv4: SSLCheckItem
   ipv6: SSLCheckItem
+  tls_versions?: Record<string, boolean>
 }
 
 interface SSLCheckItem {
@@ -318,6 +319,17 @@ onMounted(() => {
         </tbody>
       </table>
     </div>
+
+    <div v-if="result && result.tls_versions" class="tls-section">
+      <h3>TLS 版本支持</h3>
+      <div class="tls-tags">
+        <span v-for="(supported, ver) in result.tls_versions" :key="ver" class="tls-tag" :class="supported ? 'tls-ok' : 'tls-no'">
+          {{ ver }} {{ supported ? '✓' : '✗' }}
+        </span>
+      </div>
+      <p class="tls-note">TLS 1.0 / 1.1 已不安全，建议网站仅支持 TLS 1.2 及以上版本。</p>
+    </div>
+
     <div v-if="result && result.ipv4 && result.ipv4.is_reachable && !result.ipv4.is_expired && (!result.ipv6 || (!result.ipv6.is_expired && result.ipv6.is_reachable))">
       <h3>结论：<el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>网站{{ extractHost(testDomain) }} 证书有效 </h3>
       <p><el-icon><InfoFilled style="color: lightgreen;"/></el-icon>请把下方代码贴到网站底部，把这个好消息告诉你的用户，以便用户核验。</p>
@@ -381,6 +393,43 @@ onMounted(() => {
 
 .el-menu--horizontal > .el-menu-item:nth-child(1) {
   margin-right: auto;
+}
+
+.tls-section {
+  margin: 16px 0;
+  padding: 16px 20px;
+  border: 1px solid #e4e7ed;
+  border-radius: 10px;
+}
+html.dark .tls-section { border-color: #333; }
+
+.tls-section h3 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.tls-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tls-tag {
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+.tls-ok { background: #f0f9eb; color: #67C23A; }
+.tls-no { background: #fef0f0; color: #F56C6C; }
+html.dark .tls-ok { background: rgba(103, 194, 58, 0.15); }
+html.dark .tls-no { background: rgba(245, 108, 108, 0.15); }
+
+.tls-note {
+  margin-top: 10px;
+  color: #909399;
+  font-size: 0.85em;
 }
 </style>
 

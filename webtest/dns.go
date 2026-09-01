@@ -63,6 +63,68 @@ func ResolveARecord(domain string) (DNSResult, error) {
 	return result, nil
 }
 
+// QueryHTTPSAlpn 查询域名的 HTTPS/SVCB 记录（type 65），返回 ALPN 列表（HTTP/3 检测用）。
+// 支持 HTTP/3 的站点会通过 HTTPS 记录广告 alpn="h3"，据此判断。
+func QueryHTTPSAlpn(domain string) []string {
+	msg := new(dns.Msg)
+	client := new(dns.Client)
+	client.Timeout = 5 * time.Second
+	msg.SetQuestion(dns.Fqdn(domain), dns.TypeHTTPS)
+
+	response, _, err := client.Exchange(msg, dnsServer)
+	if err != nil || response == nil || response.Rcode != dns.RcodeSuccess {
+		return nil
+	}
+
+	var alpns []string
+	for _, ans := range response.Answer {
+		if https, ok := ans.(*dns.HTTPS); ok {
+			for _, kv := range https.Value {
+				if kv.Key().String() == "alpn" {
+					if alpn, ok := kv.(*dns.SVCBAlpn); ok {
+						alpns = append(alpns, alpn.Alpn...)
+					}
+				}
+			}
+		}
+	}
+	return alpns
+}
+
+// ResolveARecordWithServer 使用指定 DNS 服务器查询 A 记录（多服务器对比检测污染用）
+func ResolveARecordWithServer(domain, server string) (DNSResult, error) {
+	start := time.Now()
+	msg := new(dns.Msg)
+	client := new(dns.Client)
+	client.Timeout = 5 * time.Second
+	msg.SetQuestion(dns.Fqdn(domain), dns.TypeA)
+	result := DNSResult{Domain: domain}
+
+	response, _, err := client.Exchange(msg, server)
+	result.Duration = time.Since(start).Seconds() * 1000
+	if err != nil {
+		result.Record = []string{}
+		return result, err
+	}
+
+	if response.Rcode != dns.RcodeSuccess {
+		return result, fmt.Errorf("DNS query failed with Rcode %d", response.Rcode)
+	}
+
+	for _, ans := range response.Answer {
+		if aRecord, ok := ans.(*dns.A); ok {
+			result.Record = append(result.Record, aRecord.A.String())
+			if result.TTL == 0 {
+				result.TTL = aRecord.Header().Ttl
+			}
+		}
+	}
+	if result.Record == nil {
+		result.Record = []string{}
+	}
+	return result, nil
+}
+
 func ResolveAAAARecord(domain string) (DNSResult, error) {
 	start := time.Now()
 	msg := new(dns.Msg)

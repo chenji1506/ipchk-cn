@@ -290,8 +290,9 @@ type SSLCheckDetail struct {
 }
 
 type SSLCheckResult struct {
-	IPv4 *SSLCheckDetail `json:"ipv4"`
-	IPv6 *SSLCheckDetail `json:"ipv6"`
+	IPv4        *SSLCheckDetail `json:"ipv4"`
+	IPv6        *SSLCheckDetail `json:"ipv6"`
+	TLSVersions map[string]bool `json:"tls_versions"` // TLS 版本支持情况（基于 IPv4 主机）
 }
 type TCPingResult struct {
 	IPv4 *webtest.TCPingStats `json:"ipv4"`
@@ -513,6 +514,41 @@ func checkSSL(url string, version string) (*SSLCheckDetail, error) {
 	}
 
 	return result, nil
+}
+
+// checkTLSVersions 检测目标主机支持的 TLS 版本（1.0/1.1/1.2/1.3）。
+// 通过逐个版本尝试握手判断，返回各版本是否支持。
+func checkTLSVersions(host, port string) map[string]bool {
+	if port == "" {
+		port = "443"
+	}
+	versions := []struct {
+		name string
+		ver  uint16
+	}{
+		{"TLS 1.0", tls.VersionTLS10},
+		{"TLS 1.1", tls.VersionTLS11},
+		{"TLS 1.2", tls.VersionTLS12},
+		{"TLS 1.3", tls.VersionTLS13},
+	}
+	result := make(map[string]bool, len(versions))
+	addr := net.JoinHostPort(host, port)
+	for _, v := range versions {
+		conf := &tls.Config{
+			InsecureSkipVerify: true,
+			MinVersion:         v.ver,
+			MaxVersion:         v.ver,
+		}
+		dialer := &net.Dialer{Timeout: 5 * time.Second}
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, conf)
+		if err == nil {
+			result[v.name] = true
+			conn.Close()
+		} else {
+			result[v.name] = false
+		}
+	}
+	return result
 }
 
 func checkWebsiteHandler(c *gin.Context) {
@@ -786,6 +822,11 @@ func sslCheckHandler(c *gin.Context) {
 			}()
 
 			wg.Wait()
+		}
+
+		// TLS 版本支持检测（基于 IPv4 主机名）
+		if parsedURL != nil && parsedURL.Hostname() != "" {
+			result.TLSVersions = checkTLSVersions(parsedURL.Hostname(), parsedURL.Port())
 		}
 
 		sslCache.Store(testUrl, sslCacheEntry{result: result, timestamp: time.Now()})
@@ -2320,6 +2361,8 @@ func dnsQueryHandler(c *gin.Context) {
 	domain = parsedURL.Host
 	recodeType := c.Param("type")
 	switch recodeType {
+	case "all":
+		writeJSON(c, webtest.ResolveARecordllDNSRecords(domain))
 	case "a":
 		result, err := webtest.ResolveARecord(domain)
 		if err != nil {
@@ -2606,6 +2649,12 @@ func main() {
 	r.GET("/v1/whois/:target", whoisHandler)
 	r.GET("/v1/logs", logsHandler)
 	r.GET("/v1/analytics", analyticsHandler)
+	r.GET("/v1/headers", headersHandler)
+	r.GET("/v1/tor/:ip", torHandler)
+	r.GET("/v1/tor", torHandler)
+	r.GET("/v1/security/*url", securityHeadersHandler)
+	r.GET("/v1/dns-pollution/*domain", dnsPollutionHandler)
+	r.GET("/v1/http-version/*url", httpVersionHandler)
 
 	if err := r.Run(":" + PORTS); err != nil {
 		slog.Error("Server failed to start", "error", err)
