@@ -13,13 +13,6 @@ const allowedDomains = extractDomains(config);
 // API 基址：默认 https://ipchk.cn/，运行时可用 NUXT_PUBLIC_API_BASE 环境变量覆盖
 // （docker compose 启动时设置，无需重新 build）
 const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'https://ipchk.cn/'
-// connect-src 白名单：静态纳入常见后端地址，build 一次本地/生产通用
-const connectDomains = [...new Set([
-  ...allowedDomains,
-  new URL(apiBase).origin,
-  'http://127.0.0.1:8080',    // 本地 docker 部署（host 网络）
-  'http://localhost:8080',
-])];
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -113,7 +106,8 @@ nitro: {
         
         'connect-src': [
           "'self'",
-          ...connectDomains,// 含 apiBase（本地部署时 http://127.0.0.1:8080）
+          'http:',  // 后端地址可配置（本地/内网 http），静态枚举无法覆盖，用 scheme 通配
+          'https:',
         ],
         
         'style-src': ["'self'", 'https:', "'unsafe-inline'"],
