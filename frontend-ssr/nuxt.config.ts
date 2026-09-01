@@ -10,6 +10,10 @@ const extractDomains = (obj: any): string[] => {
 };
 
 const allowedDomains = extractDomains(config);
+// API 基址：本地部署时设 NUXT_PUBLIC_API_BASE=http://127.0.0.1:8080/，生产默认 https://ipchk.cn/
+const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'https://ipchk.cn/'
+// connect-src 白名单需包含 apiBase 的 origin，否则本地部署时前端请求被 CSP 拦截
+const connectDomains = [...new Set([...allowedDomains, new URL(apiBase).origin])];
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -68,6 +72,9 @@ export default defineNuxtConfig({
     public: {
       siteUrl: config.siteUrl,
       docConfig: docConfig,
+      // API 基址：本地部署时设 NUXT_PUBLIC_API_BASE=http://127.0.0.1:8080/，
+      // 生产默认 https://ipchk.cn/
+      apiBase: apiBase,
 
     },
   },
@@ -100,7 +107,7 @@ nitro: {
         
         'connect-src': [
           "'self'",
-          ...allowedDomains,// 允许 Umami 发送数据
+          ...connectDomains,// 含 apiBase（本地部署时 http://127.0.0.1:8080）
         ],
         
         'style-src': ["'self'", 'https:', "'unsafe-inline'"],

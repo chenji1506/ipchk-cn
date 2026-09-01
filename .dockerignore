@@ -1,0 +1,8 @@
+.git
+.gitignore
+frontend-ssr/node_modules
+frontend-ssr/.nuxt
+frontend-ssr/.data
+frontend-ssr/.output/server/node_modules/.cache
+ipdb-files
+*.log

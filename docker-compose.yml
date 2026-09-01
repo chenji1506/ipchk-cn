@@ -8,10 +8,11 @@ services:
     network_mode: host
     volumes:
       - ./ipdb-files:/app/tmp
-      - /usr/local/openresty/nginx/logs/access.log:/var/log/ipchk-access.log:ro
     environment:
       - BLOCK_PRIVATE_IPS=true
-      - PORT=8080
+      - PORTS=8080
+      # 本地默认 false（跳过数据库下载，purity 走在线源）；生产部署设 IPDB=true
+      - IPDB=${IPDB:-false}
     restart: unless-stopped
 
   frontend:
@@ -20,10 +21,9 @@ services:
       dockerfile: Dockerfile.frontend
     image: ipchk-cn-frontend:latest
     container_name: ipw-frontend
-    ports:
-      - "3000:3000"
+    network_mode: host
     environment:
-      - NUXT_PUBLIC_API_BASE=https://ipchk.cn
+      - PORT=3000
     depends_on:
       - backend
     restart: unless-stopped

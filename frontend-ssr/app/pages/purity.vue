@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { config } from '../../config/index';
 
 useHead({
   title: 'IP纯净度检测工具 | IP风险评分 | ipchk.cn',
@@ -82,7 +81,8 @@ interface CheckResponse {
   error?: string;
 }
 
-const apiBase = config.apiBaseUrls[0].url;
+const runtimeConfig = useRuntimeConfig();
+const apiBase = (runtimeConfig.public.apiBase as string) || 'https://ipchk.cn/';
 const inputText = ref('');
 const reports = ref<PurityReport[]>([]);
 const selectedIp = ref<string | null>(null);
