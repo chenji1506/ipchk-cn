@@ -23,6 +23,9 @@ services:
     container_name: ipw-frontend
     network_mode: host
     environment:
+      # 后端 API 地址：启动时通过 API_BASE 变量指定，无需重新 build。
+      # 本地默认 http://127.0.0.1:8080/，生产改 https://ipchk.cn/
+      - NUXT_PUBLIC_API_BASE=${API_BASE:-http://127.0.0.1:8080/}
       - PORT=3000
     depends_on:
       - backend

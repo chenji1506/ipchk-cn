@@ -10,10 +10,16 @@ const extractDomains = (obj: any): string[] => {
 };
 
 const allowedDomains = extractDomains(config);
-// API 基址：本地部署时设 NUXT_PUBLIC_API_BASE=http://127.0.0.1:8080/，生产默认 https://ipchk.cn/
+// API 基址：默认 https://ipchk.cn/，运行时可用 NUXT_PUBLIC_API_BASE 环境变量覆盖
+// （docker compose 启动时设置，无需重新 build）
 const apiBase = process.env.NUXT_PUBLIC_API_BASE || 'https://ipchk.cn/'
-// connect-src 白名单需包含 apiBase 的 origin，否则本地部署时前端请求被 CSP 拦截
-const connectDomains = [...new Set([...allowedDomains, new URL(apiBase).origin])];
+// connect-src 白名单：静态纳入常见后端地址，build 一次本地/生产通用
+const connectDomains = [...new Set([
+  ...allowedDomains,
+  new URL(apiBase).origin,
+  'http://127.0.0.1:8080',    // 本地 docker 部署（host 网络）
+  'http://localhost:8080',
+])];
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
