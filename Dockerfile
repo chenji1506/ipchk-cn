@@ -2,11 +2,13 @@ FROM golang:1.26-alpine AS build
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=amd64
+    GOARCH=amd64 \
+    GOPROXY=https://goproxy.cn,direct
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY main.go ./
+COPY sources.go purity.go rbl.go stability.go ./
 COPY webtest/ ./webtest/
 COPY ipdb/ ./ipdb/
 COPY ssrf/ ./ssrf/
@@ -21,13 +23,16 @@ RUN apk --no-cache add ca-certificates
 
 # 创建非root用户
 RUN adduser -D appuser
-USER appuser
 
-WORKDIR /home/appuser
+WORKDIR /app
 
 # 从构建阶段复制二进制文件和配置
 COPY --from=build /app/main .
 COPY --from=build /app/setting.json .
+
+# 数据目录归 appuser 所有（IP 数据库下载到 /app/tmp）
+RUN chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 8080
 CMD ["./main"]
