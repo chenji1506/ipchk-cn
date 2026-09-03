@@ -32,7 +32,6 @@ const activeMenu = computed(() => {
   if (p.startsWith('/whois')) return '4-2';
   if (p.startsWith('/leak')) return '4-3';
   if (p.startsWith('/cidr')) return '4-4';
-  if (p.startsWith('/api')) return '4-5';
   if (p.startsWith('/tor')) return '4-6';
   if (p.startsWith('/security')) return '4-7';
   if (p.startsWith('/dns-pollution')) return '4-8';
@@ -129,7 +128,6 @@ useHead({
         <router-link :to="localePath('/whois')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Whois 查询') }}</p></router-link>
         <router-link :to="localePath('/leak')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('隐私泄露检测') }}</p></router-link>
         <router-link :to="localePath('/cidr')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('子网计算器') }}</p></router-link>
-        <router-link :to="localePath('/api')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('API 文档') }}</p></router-link>
         <router-link :to="localePath('/tor')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Tor 出口检测') }}</p></router-link>
         <router-link :to="localePath('/security')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('网站检测') }}</p></router-link>
         <router-link :to="localePath('/dns-pollution')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('DNS 污染检测') }}</p></router-link>
@@ -218,9 +216,6 @@ useHead({
       </el-menu-item>
       <el-menu-item index="4-4">
         <router-link :to="localePath('/cidr')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('子网计算器') }}</p></router-link>
-      </el-menu-item>
-      <el-menu-item index="4-5">
-        <router-link :to="localePath('/api')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('API 文档') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-6">
         <router-link :to="localePath('/tor')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Tor 出口检测') }}</p></router-link>
