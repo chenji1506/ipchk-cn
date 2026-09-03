@@ -2,11 +2,12 @@
 import { ref } from 'vue'
 
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
   title: 'DNS 污染检测 | ipchk.cn',
   meta: [
-    { name: 'description', content: '用多个公共 DNS 服务器（阿里云/腾讯/Google/Cloudflare）解析同一域名对比结果，检测域名是否被 DNS 污染或劫持。' },
+    { name: 'description', content: t('用多个公共 DNS 服务器（阿里云/腾讯/Google/Cloudflare）解析同一域名对比结果，检测域名是否被 DNS 污染或劫持。') },
     { name: 'keywords', content: 'DNS污染,DNS劫持,DNS检测,域名污染,dns pollution,dns hijack' },
   ],
 })
@@ -22,14 +23,14 @@ async function queryPollution() {
   result.value = null
   const domain = tmpdomain.value.trim()
   if (!domain) {
-    error.value = '请输入域名'
+    error.value = t('请输入域名')
     loading.value = false
     return
   }
   try {
     result.value = await $fetch(config.apiBaseUrls[0].url + 'v1/dns-pollution/' + encodeURIComponent(domain))
   } catch (e: any) {
-    error.value = e?.message || '请求失败，请重试'
+    error.value = e?.message || t('请求失败，请重试')
   } finally {
     loading.value = false
   }
@@ -39,14 +40,14 @@ async function queryPollution() {
 <template>
   <div class="title">
     <header>
-      <h1>DNS 污染检测</h1>
-      <p>用多个公共 DNS 服务器解析同一域名，对比结果检测 DNS 污染 / 劫持</p>
+      <h1>{{ $t('DNS 污染检测') }}</h1>
+      <p>{{ $t('用多个公共 DNS 服务器解析同一域名，对比结果检测 DNS 污染 / 劫持') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-input v-model="tmpdomain" placeholder="输入域名（如：google.com）" @keyup.enter="queryPollution()" />
-      <el-button @click="queryPollution()" type="primary" :loading="loading">检测</el-button>
+      <el-input v-model="tmpdomain" :placeholder="$t('输入域名（如：google.com）')" @keyup.enter="queryPollution()" />
+      <el-button @click="queryPollution()" type="primary" :loading="loading">{{ $t('检测') }}</el-button>
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
@@ -59,10 +60,10 @@ async function queryPollution() {
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">DNS 服务器</th>
-            <th class="table-header">地区</th>
-            <th class="table-header">解析结果</th>
-            <th class="table-header">耗时</th>
+            <th class="table-header">{{ $t('DNS 服务器') }}</th>
+            <th class="table-header">{{ $t('地区') }}</th>
+            <th class="table-header">{{ $t('解析结果') }}</th>
+            <th class="table-header">{{ $t('耗时') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -76,13 +77,13 @@ async function queryPollution() {
             </td>
             <td class="table-value">
               <template v-if="s.error">
-                <span class="error-text">查询失败</span>
+                <span class="error-text">{{ $t('查询失败') }}</span>
               </template>
               <template v-else-if="s.records.length">
                 <span v-for="ip in s.records" :key="ip" class="ip-chip"><code>{{ ip }}</code></span>
               </template>
               <template v-else>
-                <span style="color: #999;">无 A 记录</span>
+                <span style="color: #999;">{{ $t('无 A 记录') }}</span>
               </template>
             </td>
             <td class="table-value">{{ s.duration ? s.duration.toFixed(0) + ' ms' : '—' }}</td>
@@ -92,8 +93,8 @@ async function queryPollution() {
     </div>
 
     <blockquote>
-      同时向国内（阿里云、腾讯 DNSPod）和国外（Google、Cloudflare）公共 DNS 查询 A 记录并对比。<br/>
-      结果一致说明解析正常；结果不一致可能是 DNS 污染/劫持，也可能是 CDN 分区域解析（国内网站常见），需结合 IP 归属综合判断。
+      {{ $t('同时向国内（阿里云、腾讯 DNSPod）和国外（Google、Cloudflare）公共 DNS 查询 A 记录并对比。') }}<br/>
+      {{ $t('结果一致说明解析正常；结果不一致可能是 DNS 污染/劫持，也可能是 CDN 分区域解析（国内网站常见），需结合 IP 归属综合判断。') }}
     </blockquote>
   </div>
 </template>

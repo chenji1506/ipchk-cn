@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
   title: '批量 IP 查询 | 多IP归属地 | ipchk.cn',
   meta: [
-    { name: 'description', content: '批量查询多个 IP 的归属地信息，支持换行分隔。' },
+    { name: 'description', content: t('批量查询多个 IP 的归属地信息，支持换行分隔。') },
   ],
 });
 
@@ -37,7 +38,7 @@ function clearHistory() {
 
 async function batchQuery() {
   const lines = ipsInput.value.split('\n').map(s => s.trim()).filter(Boolean);
-  if (!lines.length) { error.value = '请输入至少一个 IP'; return; }
+  if (!lines.length) { error.value = t('请输入至少一个 IP'); return; }
   loading.value = true;
   error.value = '';
   results.value = [];
@@ -56,7 +57,7 @@ async function batchQuery() {
       });
       saveHistory(ip);
     } catch {
-      results.value.push({ ip, country: '查询失败', region: '', city: '', isp: '', source: '' });
+      results.value.push({ ip, country: t('查询失败'), region: '', city: '', isp: '', source: '' });
     }
   }
   loading.value = false;
@@ -68,8 +69,8 @@ onMounted(loadHistory);
 <template>
   <div class="title">
     <header>
-      <h1>批量 IP 查询</h1>
-      <p>一次查询多个 IP 的归属地（最多 20 个，换行分隔）</p>
+      <h1>{{ $t('批量 IP 查询') }}</h1>
+      <p>{{ $t('一次查询多个 IP 的归属地（最多 20 个，换行分隔）') }}</p>
     </header>
   </div>
   <div class="content">
@@ -81,8 +82,8 @@ onMounted(loadHistory);
       class="ips-input"
     />
     <div class="btn-row">
-      <el-button type="primary" :loading="loading" @click="batchQuery">批量查询</el-button>
-      <el-button @click="ipsInput = ''">清空</el-button>
+      <el-button type="primary" :loading="loading" @click="batchQuery">{{ $t('批量查询') }}</el-button>
+      <el-button @click="ipsInput = ''">{{ $t('清空') }}</el-button>
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
@@ -90,8 +91,8 @@ onMounted(loadHistory);
     <!-- 历史记录 -->
     <div v-if="history.length" class="history-section">
       <div class="history-header">
-        <span class="history-title">最近查询</span>
-        <button class="clear-btn" @click="clearHistory">清空历史</button>
+        <span class="history-title">{{ $t('最近查询') }}</span>
+        <button class="clear-btn" @click="clearHistory">{{ $t('清空历史') }}</button>
       </div>
       <div class="history-tags">
         <span v-for="(ip, i) in history" :key="i" class="history-tag" @click="useHistory(ip)">{{ ip }}</span>
@@ -104,9 +105,9 @@ onMounted(loadHistory);
         <thead>
           <tr>
             <th class="table-header">IP</th>
-            <th class="table-header">归属地</th>
-            <th class="table-header">运营商</th>
-            <th class="table-header">数据源</th>
+            <th class="table-header">{{ $t('归属地') }}</th>
+            <th class="table-header">{{ $t('运营商') }}</th>
+            <th class="table-header">{{ $t('数据源') }}</th>
           </tr>
         </thead>
         <tbody>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 useHead({
   title: 'API 文档 | 开放接口 | ipchk.cn',
   meta: [
@@ -8,39 +9,39 @@ useHead({
 
 const endpoints = [
   {
-    method: 'GET', path: '/ip', desc: '查询本机公网 IP（纯文本返回）',
+    method: 'GET', path: '/ip', desc: t('查询本机公网 IP（纯文本返回）'),
     example: 'curl https://ipchk.cn/ip',
   },
   {
-    method: 'GET', path: '/v1/location', desc: '查询请求方 IP 的归属地（JSON）',
+    method: 'GET', path: '/v1/location', desc: t('查询请求方 IP 的归属地（JSON）'),
     example: 'curl https://ipchk.cn/v1/location',
   },
   {
-    method: 'GET', path: '/v1/location/:ip', desc: '查询指定 IP 的归属地',
+    method: 'GET', path: '/v1/location/:ip', desc: t('查询指定 IP 的归属地'),
     example: 'curl https://ipchk.cn/v1/location/8.8.8.8',
   },
   {
-    method: 'GET', path: '/v1/purity', desc: '查询本机 IP 纯净度评分',
+    method: 'GET', path: '/v1/purity', desc: t('查询本机 IP 纯净度评分'),
     example: 'curl https://ipchk.cn/v1/purity',
   },
   {
-    method: 'GET', path: '/v1/purity/:ip', desc: '查询指定 IP 纯净度评分',
+    method: 'GET', path: '/v1/purity/:ip', desc: t('查询指定 IP 纯净度评分'),
     example: 'curl https://ipchk.cn/v1/purity/8.8.8.8',
   },
   {
-    method: 'POST', path: '/v1/purity/check', desc: '批量 IP 纯净度检测（最多 10 个）',
+    method: 'POST', path: '/v1/purity/check', desc: t('批量 IP 纯净度检测（最多 10 个）'),
     example: 'curl -X POST https://ipchk.cn/v1/purity/check -H "Content-Type: application/json" -d \'{"ips":["8.8.8.8","1.1.1.1"]}\'',
   },
   {
-    method: 'GET', path: '/v1/rbl', desc: '查询本机 IP 邮件黑名单（16 个 DNSBL 源）',
+    method: 'GET', path: '/v1/rbl', desc: t('查询本机 IP 邮件黑名单（16 个 DNSBL 源）'),
     example: 'curl https://ipchk.cn/v1/rbl',
   },
   {
-    method: 'GET', path: '/v1/rbl/:ip', desc: '查询指定 IP 邮件黑名单（16 个 DNSBL 源）',
+    method: 'GET', path: '/v1/rbl/:ip', desc: t('查询指定 IP 邮件黑名单（16 个 DNSBL 源）'),
     example: 'curl https://ipchk.cn/v1/rbl/8.8.8.8',
   },
   {
-    method: 'GET', path: '/v1/card/:ip', desc: '生成 IP 信息卡片图（SVG）',
+    method: 'GET', path: '/v1/card/:ip', desc: t('生成 IP 信息卡片图（SVG）'),
     example: 'curl https://ipchk.cn/v1/card/8.8.8.8',
   },
   {
@@ -48,7 +49,7 @@ const endpoints = [
     example: 'curl "https://ipchk.cn/v1/scan/8.8.8.8?ports=53,80,443"',
   },
   {
-    method: 'GET', path: '/v1/whois/:target', desc: '域名/IP 注册信息（RDAP）',
+    method: 'GET', path: '/v1/whois/:target', desc: t('域名/IP 注册信息（RDAP）'),
     example: 'curl https://ipchk.cn/v1/whois/baidu.com',
   },
   {
@@ -64,7 +65,7 @@ const endpoints = [
     example: 'curl "https://ipchk.cn/v1/tcping/baidu.com?port=80&count=4"',
   },
   {
-    method: 'GET', path: '/v1/speed/:ver/:url', desc: '网站测速（ver: v4/v6/dual）',
+    method: 'GET', path: '/v1/speed/:ver/:url', desc: t('网站测速（ver: v4/v6/dual）'),
     example: 'curl https://ipchk.cn/v1/speed/v4/baidu.com',
   },
 ];
@@ -73,21 +74,21 @@ const endpoints = [
 <template>
   <div class="title">
     <header>
-      <h1>API 文档</h1>
-      <p>ipchk.cn 开放接口，全部免费公开</p>
+      <h1>{{ $t('API 文档') }}</h1>
+      <p>{{ $t('ipchk.cn 开放接口，全部免费公开') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="notice-card">
-      所有接口返回结构化 JSON（<code>/ip</code> 返回纯文本，<code>/v1/card</code> 返回 SVG 卡片图）。命令行访问归属地/纯净度/黑名单接口自动返回格式化文本。批量检测接口 <code>/v1/purity/check</code> 使用 <b>POST</b>。
+      {{ $t('所有接口返回结构化 JSON（') }}<code>/ip</code> {{ $t('返回纯文本，') }}<code>/v1/card</code> {{ $t('返回 SVG 卡片图）。命令行访问归属地/纯净度/黑名单接口自动返回格式化文本。批量检测接口') }} <code>/v1/purity/check</code> {{ $t('使用') }} <b>POST</b>。
     </div>
 
     <table class="result-table">
       <thead>
         <tr>
-          <th class="table-header" style="width: 70px">方法</th>
-          <th class="table-header">接口路径</th>
-          <th class="table-header">说明</th>
+          <th class="table-header" style="width: 70px">{{ $t('方法') }}</th>
+          <th class="table-header">{{ $t('接口路径') }}</th>
+          <th class="table-header">{{ $t('说明') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -99,7 +100,7 @@ const endpoints = [
       </tbody>
     </table>
 
-    <h3 class="example-title">使用示例</h3>
+    <h3 class="example-title">{{ $t('使用示例') }}</h3>
     <div v-for="(ep, i) in endpoints.slice(0, 8)" :key="'ex' + i" class="example-block">
       <div class="example-desc">{{ ep.desc }}</div>
       <pre><code>{{ ep.example }}</code></pre>

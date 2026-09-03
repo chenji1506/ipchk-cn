@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 
+const { t } = useI18n()
+
 useHead({
-  title: '隐私泄露检测 | WebRTC/DNS/指纹 | ipchk.cn',
+  title: () => `${t('隐私泄露检测')} | ipchk.cn`,
   meta: [
-    { name: 'description', content: '检测 WebRTC 与 DNS 是否泄露真实 IP，展示浏览器暴露的指纹信息，比对时区与 IP 地理位置是否一致。' },
+    { name: 'description', content: () => t('检测 WebRTC 与 DNS 是否泄露真实 IP，展示浏览器暴露的指纹信息，比对时区与 IP 地理位置是否一致。') },
   ],
 });
 
@@ -59,15 +61,15 @@ const webrtcLeakLevel = computed<'bad' | 'warn' | 'good'>(() => {
 });
 
 const webrtcLeakText = computed(() => {
-  if (webrtcUnsupported.value) return '当前浏览器不支持 WebRTC';
+  if (webrtcUnsupported.value) return t('当前浏览器不支持 WebRTC');
   if (!webrtcDone.value) return '';
   const g = webrtcGroups.value;
-  if (g.privateV4.length && g.publicV4.length) return '⚠ 检测到 WebRTC 泄露：内网与公网真实 IP 均已暴露！';
-  if (g.privateV4.length) return '⚠ 检测到 WebRTC 泄露：真实内网 IP 已暴露！';
-  if (g.publicV4.length) return '⚠ 检测到 WebRTC 泄露：真实公网 IP 已暴露（绕过代理/VPN）！';
-  if (g.publicV6.length) return '⚠ WebRTC 暴露了公网 IPv6 地址';
-  if (g.mdns.length) return '✓ 未检测到泄露（浏览器已用 mDNS 混淆本地地址）';
-  return '✓ 未检测到 WebRTC 泄露';
+  if (g.privateV4.length && g.publicV4.length) return t('⚠ 检测到 WebRTC 泄露：内网与公网真实 IP 均已暴露！');
+  if (g.privateV4.length) return t('⚠ 检测到 WebRTC 泄露：真实内网 IP 已暴露！');
+  if (g.publicV4.length) return t('⚠ 检测到 WebRTC 泄露：真实公网 IP 已暴露（绕过代理/VPN）！');
+  if (g.publicV6.length) return t('⚠ WebRTC 暴露了公网 IPv6 地址');
+  if (g.mdns.length) return t('✓ 未检测到泄露（浏览器已用 mDNS 混淆本地地址）');
+  return t('✓ 未检测到 WebRTC 泄露');
 });
 
 function detectWebRTC() {
@@ -204,7 +206,7 @@ function getCanvasFingerprint(): Promise<string> {
       canvas.width = 220;
       canvas.height = 60;
       const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve('不支持'); return; }
+      if (!ctx) { resolve(t('不支持')); return; }
       ctx.textBaseline = 'top';
       ctx.font = '14px "Arial"';
       ctx.fillStyle = '#f60';
@@ -215,7 +217,7 @@ function getCanvasFingerprint(): Promise<string> {
       ctx.fillText('ipchk.cn 指纹测试 <canvas>', 4, 17);
       resolve(hashString(canvas.toDataURL()));
     } catch {
-      resolve('不支持');
+      resolve(t('不支持'));
     }
   });
 }
@@ -235,12 +237,12 @@ function detectPlatform(): string {
   if (/Android/i.test(ua)) return 'Android';
   if (/CrOS/i.test(ua)) return 'Chrome OS';
   if (/Linux/i.test(ua)) return 'Linux';
-  return nav.platform || '未知';
+  return nav.platform || t('未知');
 }
 
 async function collectFingerprint() {
   const nav = navigator as any;
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '未知';
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || t('未知');
   const offsetMin = -new Date().getTimezoneOffset();
   const offsetStr = offsetMin === 0 ? 'UTC±0' : `UTC${offsetMin > 0 ? '+' : ''}${offsetMin / 60}`;
   canvasComputing.value = true;
@@ -249,17 +251,17 @@ async function collectFingerprint() {
   fingerprint.value = {
     timezone: tz,
     timezoneOffset: offsetStr,
-    language: navigator.language || '未知',
-    languages: navigator.languages ? navigator.languages.join(', ') : '未知',
+    language: navigator.language || t('未知'),
+    languages: navigator.languages ? navigator.languages.join(', ') : t('未知'),
     platform: detectPlatform(),
-    cores: navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : '未知',
-    memory: nav.deviceMemory ? `约 ${nav.deviceMemory} GB（浏览器估算）` : '不可读（需 HTTPS 安全上下文）',
+    cores: navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : t('未知'),
+    memory: nav.deviceMemory ? t('约 {size} GB（浏览器估算）', { size: nav.deviceMemory }) : t('不可读（需 HTTPS 安全上下文）'),
     screen: `${window.screen.width}×${window.screen.height}`,
-    colorDepth: window.screen.colorDepth ? window.screen.colorDepth + ' bit' : '未知',
-    doNotTrack: navigator.doNotTrack === '1' ? '已开启' : (navigator.doNotTrack === '0' ? '已关闭' : '未设置'),
-    cookies: navigator.cookieEnabled ? '已启用' : '已禁用',
+    colorDepth: window.screen.colorDepth ? window.screen.colorDepth + ' bit' : t('未知'),
+    doNotTrack: navigator.doNotTrack === '1' ? t('已开启') : (navigator.doNotTrack === '0' ? t('已关闭') : t('未设置')),
+    cookies: navigator.cookieEnabled ? t('已启用') : t('已禁用'),
     canvas,
-    userAgent: navigator.userAgent || '未知',
+    userAgent: navigator.userAgent || t('未知'),
   };
 }
 
@@ -308,7 +310,7 @@ function tzMatchesContinent(tz: string, country: string): boolean {
 async function detectTimezoneMismatch() {
   tzChecking.value = true;
   tzStatus.value = 'loading';
-  browserTZ.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '未知';
+  browserTZ.value = Intl.DateTimeFormat().resolvedOptions().timeZone || t('未知');
   try {
     const data = await $fetch<any>(apiBase + 'v1/location', { method: 'GET', timeout: 8000 });
     const { country, detail } = extractCountry(data);
@@ -354,8 +356,8 @@ onMounted(() => {
 <template>
   <div class="title">
     <header>
-      <h1>隐私泄露检测</h1>
-      <p>检测 WebRTC / DNS 是否泄露真实 IP，展示浏览器暴露的指纹，比对时区与 IP 地理位置</p>
+      <h1>{{ $t('隐私泄露检测') }}</h1>
+      <p>{{ $t('检测 WebRTC / DNS 是否泄露真实 IP，展示浏览器暴露的指纹，比对时区与 IP 地理位置') }}</p>
     </header>
   </div>
   <div class="content">
@@ -363,9 +365,9 @@ onMounted(() => {
     <div class="section-card">
       <div class="section-header">
         <span class="section-tag tag-webrtc">WebRTC</span>
-        <span class="section-desc">WebRTC 可能绕过代理/VPN 暴露真实 IP</span>
+        <span class="section-desc">{{ $t('WebRTC 可能绕过代理/VPN 暴露真实 IP') }}</span>
         <button class="action-btn" @click="detectWebRTC" :disabled="webrtcDetecting">
-          {{ webrtcDetecting ? '检测中...' : '重新检测' }}
+          {{ webrtcDetecting ? $t('检测中...') : $t('重新检测') }}
         </button>
       </div>
       <div v-if="webrtcDone" class="result-area">
@@ -373,31 +375,31 @@ onMounted(() => {
           {{ webrtcLeakText }}
         </div>
         <div v-if="webrtcGroups.privateV4.length" class="group-row">
-          <span class="group-label leak-bad">内网 IPv4</span>
+          <span class="group-label leak-bad">{{ $t('内网 IPv4') }}</span>
           <div class="ip-list">
             <span v-for="(ip, i) in webrtcGroups.privateV4" :key="'pv4' + i" class="ip-chip">{{ ip }}</span>
           </div>
         </div>
         <div v-if="webrtcGroups.publicV4.length" class="group-row">
-          <span class="group-label leak-bad">公网 IPv4</span>
+          <span class="group-label leak-bad">{{ $t('公网 IPv4') }}</span>
           <div class="ip-list">
             <span v-for="(ip, i) in webrtcGroups.publicV4" :key="'pb4' + i" class="ip-chip">{{ ip }}</span>
           </div>
         </div>
         <div v-if="webrtcGroups.publicV6.length" class="group-row">
-          <span class="group-label leak-warn">公网 IPv6</span>
+          <span class="group-label leak-warn">{{ $t('公网 IPv6') }}</span>
           <div class="ip-list">
             <span v-for="(ip, i) in webrtcGroups.publicV6" :key="'pb6' + i" class="ip-chip">{{ ip }}</span>
           </div>
         </div>
         <div v-if="webrtcGroups.linkLocalV6.length" class="group-row">
-          <span class="group-label">链路本地 IPv6</span>
+          <span class="group-label">{{ $t('链路本地 IPv6') }}</span>
           <div class="ip-list">
             <span v-for="(ip, i) in webrtcGroups.linkLocalV6" :key="'ll6' + i" class="ip-chip">{{ ip }}</span>
           </div>
         </div>
         <div v-if="webrtcGroups.mdns.length" class="group-row">
-          <span class="group-label leak-good">mDNS 混淆</span>
+          <span class="group-label leak-good">{{ $t('mDNS 混淆') }}</span>
           <div class="ip-list">
             <span v-for="(ip, i) in webrtcGroups.mdns" :key="'mdns' + i" class="ip-chip">{{ ip }}</span>
           </div>
@@ -409,28 +411,28 @@ onMounted(() => {
     <div class="section-card">
       <div class="section-header">
         <span class="section-tag tag-dns">DNS</span>
-        <span class="section-desc">检查 DNS 解析是否经公共解析器（仅能判定可达性）</span>
+        <span class="section-desc">{{ $t('检查 DNS 解析是否经公共解析器（仅能判定可达性）') }}</span>
         <button class="action-btn" @click="detectDNSLeak" :disabled="dnsDetecting">
-          {{ dnsDetecting ? '检测中...' : '开始检测' }}
+          {{ dnsDetecting ? $t('检测中...') : $t('开始检测') }}
         </button>
       </div>
       <div v-if="dnsServers.length" class="result-area">
         <table class="result-table">
           <thead>
-            <tr><th class="table-header">探测节点</th><th class="table-header">结果</th></tr>
+            <tr><th class="table-header">{{ $t('探测节点') }}</th><th class="table-header">{{ $t('结果') }}</th></tr>
           </thead>
           <tbody>
             <tr v-for="(s, i) in dnsServers" :key="i">
               <td class="table-label">{{ s.server }}</td>
               <td class="table-value">
-                <span v-if="s.detected" class="badge-green">可达</span>
-                <span v-else class="badge-red">不可达</span>
+                <span v-if="s.detected" class="badge-green">{{ $t('可达') }}</span>
+                <span v-else class="badge-red">{{ $t('不可达') }}</span>
               </td>
             </tr>
           </tbody>
         </table>
         <div class="leak-result leak-warn" v-if="dnsDone">
-          ⚠ 以上仅为探测域名可达性。精确的 DNS 泄露检测需服务端配合记录解析来源，本页仅供参考。
+          ⚠ {{ $t('以上仅为探测域名可达性。精确的 DNS 泄露检测需服务端配合记录解析来源，本页仅供参考。') }}
         </div>
       </div>
     </div>
@@ -438,26 +440,26 @@ onMounted(() => {
     <!-- 时区 / IP 地理位置比对 -->
     <div class="section-card">
       <div class="section-header">
-        <span class="section-tag tag-timezone">时区</span>
-        <span class="section-desc">比对浏览器时区与出口 IP 地理位置是否一致</span>
+        <span class="section-tag tag-timezone">{{ $t('时区') }}</span>
+        <span class="section-desc">{{ $t('比对浏览器时区与出口 IP 地理位置是否一致') }}</span>
         <button class="action-btn" @click="detectTimezoneMismatch" :disabled="tzChecking">
-          {{ tzChecking ? '检测中...' : '重新检测' }}
+          {{ tzChecking ? $t('检测中...') : $t('重新检测') }}
         </button>
       </div>
       <div class="result-area">
         <div class="tz-row">
-          <span class="tz-label">浏览器时区</span>
+          <span class="tz-label">{{ $t('浏览器时区') }}</span>
           <span class="tz-value">{{ browserTZ || '—' }}</span>
         </div>
         <div class="tz-row">
-          <span class="tz-label">出口 IP 归属</span>
-          <span class="tz-value">{{ ipLocation || (tzStatus === 'loading' ? '检测中...' : '未知') }}</span>
+          <span class="tz-label">{{ $t('出口 IP 归属') }}</span>
+          <span class="tz-value">{{ ipLocation || (tzStatus === 'loading' ? $t('检测中...') : $t('未知')) }}</span>
         </div>
         <div v-if="tzStatus !== 'loading'" class="leak-result"
              :class="tzStatus === 'match' ? 'leak-good' : tzStatus === 'mismatch' ? 'leak-bad' : 'leak-warn'">
-          <template v-if="tzStatus === 'match'">✓ 时区与 IP 地理位置一致</template>
-          <template v-else-if="tzStatus === 'mismatch'">⚠ 时区与 IP 地理位置不一致，可能泄露了真实所在地区</template>
-          <template v-else>无法判定（IP 库未加载或网络异常）</template>
+          <template v-if="tzStatus === 'match'">✓ {{ $t('时区与 IP 地理位置一致') }}</template>
+          <template v-else-if="tzStatus === 'mismatch'">⚠ {{ $t('时区与 IP 地理位置不一致，可能泄露了真实所在地区') }}</template>
+          <template v-else>{{ $t('无法判定（IP 库未加载或网络异常）') }}</template>
         </div>
       </div>
     </div>
@@ -465,30 +467,30 @@ onMounted(() => {
     <!-- 浏览器指纹 -->
     <div class="section-card">
       <div class="section-header">
-        <span class="section-tag tag-fingerprint">指纹</span>
-        <span class="section-desc">浏览器默认暴露给网站的环境信息</span>
+        <span class="section-tag tag-fingerprint">{{ $t('指纹') }}</span>
+        <span class="section-desc">{{ $t('浏览器默认暴露给网站的环境信息') }}</span>
         <button class="action-btn" @click="collectFingerprint" :disabled="canvasComputing">
-          {{ canvasComputing ? '计算中...' : '重新收集' }}
+          {{ canvasComputing ? $t('计算中...') : $t('重新收集') }}
         </button>
       </div>
       <div v-if="fingerprint" class="result-area">
         <table class="result-table">
           <tbody>
-            <tr><td class="table-label">时区</td><td class="table-value">{{ fingerprint.timezone }}（{{ fingerprint.timezoneOffset }}）</td></tr>
-            <tr><td class="table-label">语言</td><td class="table-value">{{ fingerprint.language }}</td></tr>
-            <tr><td class="table-label">接受语言</td><td class="table-value">{{ fingerprint.languages }}</td></tr>
-            <tr><td class="table-label">平台</td><td class="table-value">{{ fingerprint.platform }}</td></tr>
-            <tr><td class="table-label">CPU 逻辑核数</td><td class="table-value">{{ fingerprint.cores }}</td></tr>
-            <tr><td class="table-label">设备内存</td><td class="table-value">{{ fingerprint.memory }}</td></tr>
-            <tr><td class="table-label">屏幕分辨率</td><td class="table-value">{{ fingerprint.screen }}</td></tr>
-            <tr><td class="table-label">色彩深度</td><td class="table-value">{{ fingerprint.colorDepth }}</td></tr>
+            <tr><td class="table-label">{{ $t('时区') }}</td><td class="table-value">{{ fingerprint.timezone }}（{{ fingerprint.timezoneOffset }}）</td></tr>
+            <tr><td class="table-label">{{ $t('语言') }}</td><td class="table-value">{{ fingerprint.language }}</td></tr>
+            <tr><td class="table-label">{{ $t('接受语言') }}</td><td class="table-value">{{ fingerprint.languages }}</td></tr>
+            <tr><td class="table-label">{{ $t('平台') }}</td><td class="table-value">{{ fingerprint.platform }}</td></tr>
+            <tr><td class="table-label">{{ $t('CPU 逻辑核数') }}</td><td class="table-value">{{ fingerprint.cores }}</td></tr>
+            <tr><td class="table-label">{{ $t('设备内存') }}</td><td class="table-value">{{ fingerprint.memory }}</td></tr>
+            <tr><td class="table-label">{{ $t('屏幕分辨率') }}</td><td class="table-value">{{ fingerprint.screen }}</td></tr>
+            <tr><td class="table-label">{{ $t('色彩深度') }}</td><td class="table-value">{{ fingerprint.colorDepth }}</td></tr>
             <tr><td class="table-label">Do Not Track</td><td class="table-value">{{ fingerprint.doNotTrack }}</td></tr>
             <tr><td class="table-label">Cookie</td><td class="table-value">{{ fingerprint.cookies }}</td></tr>
-            <tr><td class="table-label">Canvas 指纹</td><td class="table-value"><code>{{ fingerprint.canvas }}</code></td></tr>
+            <tr><td class="table-label">{{ $t('Canvas 指纹') }}</td><td class="table-value"><code>{{ fingerprint.canvas }}</code></td></tr>
           </tbody>
         </table>
         <div class="leak-result leak-warn">
-          ⚠ 以上信息任何网站都能读取，构成你的「浏览器指纹」。时区/语言/分辨率等可用于跨站追踪，Canvas 指纹可唯一定位浏览器。
+          ⚠ {{ $t('以上信息任何网站都能读取，构成你的「浏览器指纹」。时区/语言/分辨率等可用于跨站追踪，Canvas 指纹可唯一定位浏览器。') }}
         </div>
       </div>
     </div>
@@ -496,19 +498,19 @@ onMounted(() => {
     <!-- HTTP 请求头 -->
     <div class="section-card">
       <div class="section-header">
-        <span class="section-tag tag-headers">请求头</span>
-        <span class="section-desc">浏览器发送给网站的 HTTP 请求头</span>
+        <span class="section-tag tag-headers">{{ $t('请求头') }}</span>
+        <span class="section-desc">{{ $t('浏览器发送给网站的 HTTP 请求头') }}</span>
         <button class="action-btn" @click="loadHeaders" :disabled="headersLoading">
-          {{ headersLoading ? '加载中...' : '重新加载' }}
+          {{ headersLoading ? $t('加载中...') : $t('重新加载') }}
         </button>
       </div>
       <div v-if="headersData" class="result-area">
         <div class="tz-row">
-          <span class="tz-label">你的 IP</span>
+          <span class="tz-label">{{ $t('你的 IP') }}</span>
           <span class="tz-value"><code>{{ headersData.ip }}</code></span>
         </div>
         <div class="tz-row">
-          <span class="tz-label">协议 / Host</span>
+          <span class="tz-label">{{ $t('协议 / Host') }}</span>
           <span class="tz-value">{{ headersData.protocol }} · {{ headersData.host }}</span>
         </div>
         <table class="result-table">
@@ -523,7 +525,7 @@ onMounted(() => {
     </div>
 
     <blockquote>
-      说明：WebRTC 检测读取浏览器本地网络地址并分类（内网/公网/mDNS）；时区比对调用本站 IP 库判断出口 IP 归属；请求头为服务器实际收到的信息；DNS 与指纹为浏览器自检，结果仅供参考。
+      {{ $t('说明：WebRTC 检测读取浏览器本地网络地址并分类（内网/公网/mDNS）；时区比对调用本站 IP 库判断出口 IP 归属；请求头为服务器实际收到的信息；DNS 与指纹为浏览器自检，结果仅供参考。') }}
     </blockquote>
   </div>
 </template>

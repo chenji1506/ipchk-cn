@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { computed } from 'vue';
 
 // 场景风险评估：基于 IP 画像的启发式星级（参考 ipchk.cc 设计）
@@ -19,8 +20,8 @@ const flags = computed(() => {
   const r = props.report || {};
   const primary = r.profile?.primary || '';
   const ipType = r.ip_type || '';
-  const isDatacenter = primary === '机房IP' || ipType === '机房IP';
-  const isResidential = primary === '住宅IP' || primary === '移动网络IP' || ipType === '住宅IP';
+  const isDatacenter = primary === t('机房IP') || ipType === t('机房IP');
+  const isResidential = primary === t('住宅IP') || primary === t('移动网络IP') || ipType === t('住宅IP');
   const hasRbl = (r.rbl?.listed_count || 0) > 0 || (r.rbl?.network_listed_count || 0) > 0;
   const hasProxy = (r.purity?.signal_risk || 0) >= 20;
   return { isDatacenter, isResidential, hasRbl, hasProxy };
@@ -35,10 +36,10 @@ const scenarios = computed<Scenario[]>(() => {
     let reason = goodReason;
     if (severe) {
       stars -= 1;
-      reason = f.hasRbl ? '存在黑名单记录，需要先复核' : '代理或 VPN 属性会提高平台风控';
+      reason = f.hasRbl ? t('存在黑名单记录，需要先复核') : t('代理或 VPN 属性会提高平台风控');
     }
     stars = Math.max(1, Math.min(5, stars));
-    const label = stars >= 5 ? '极佳' : stars === 4 ? '良好' : stars === 3 ? '谨慎使用' : stars === 2 ? '风险较高' : '不建议';
+    const label = stars >= 5 ? t('极佳') : stars === 4 ? t('良好') : stars === 3 ? t('谨慎使用') : stars === 2 ? t('风险较高') : t('不建议');
     const tone = stars >= 4 ? 'good' : stars === 3 ? 'warn' : 'bad';
     const icon = stars >= 4 ? 'ri-checkbox-circle-fill' : stars === 3 ? 'ri-error-warning-fill' : 'ri-close-circle-fill';
     return { name, stars, label, tone, icon, reason: severe ? reason : (stars >= 4 ? goodReason : riskReason) };
@@ -46,17 +47,17 @@ const scenarios = computed<Scenario[]>(() => {
 
   return [
     ev('TikTok', (f.isResidential ? 1 : 0) + (f.isDatacenter ? -1 : 0) + 3,
-      '住宅或移动网络更接近普通用户环境',
-      f.isDatacenter ? '机房IP更容易触发账号与地区风控' : '画像证据不足，建议小号先测试'),
-    ev('跨境电商', (f.isResidential ? 1 : 0) + (f.isDatacenter ? -1 : 0) + 3,
-      '住宅网络且公开信誉良好',
-      f.isDatacenter ? '机房IP不适合注册、支付等敏感操作' : '注册和支付前建议人工复核'),
-    ev('社媒运营', (f.isResidential ? 1 : 0) + (f.isDatacenter ? -1 : 0) + 3,
-      '用户型网络更适合日常登录和运营',
-      f.isDatacenter ? '机房出口可能影响登录稳定性' : '建议先进行低频登录测试'),
+      t('住宅或移动网络更接近普通用户环境'),
+      f.isDatacenter ? t('机房IP更容易触发账号与地区风控') : t('画像证据不足，建议小号先测试')),
+    ev(t('跨境电商'), (f.isResidential ? 1 : 0) + (f.isDatacenter ? -1 : 0) + 3,
+      t('住宅网络且公开信誉良好'),
+      f.isDatacenter ? t('机房IP不适合注册、支付等敏感操作') : t('注册和支付前建议人工复核')),
+    ev(t('社媒运营'), (f.isResidential ? 1 : 0) + (f.isDatacenter ? -1 : 0) + 3,
+      t('用户型网络更适合日常登录和运营'),
+      f.isDatacenter ? t('机房出口可能影响登录稳定性') : t('建议先进行低频登录测试')),
     ev('AI 应用', (f.isDatacenter ? 1 : 0) + 3,
-      '机房 IP 适合 API、服务器和自建应用',
-      '服务可用性仍受地区和平台策略影响'),
+      t('机房 IP 适合 API、服务器和自建应用'),
+      t('服务可用性仍受地区和平台策略影响')),
   ];
 });
 </script>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
   title: '端口扫描工具 | 在线端口检测 | ipchk.cn',
   meta: [
-    { name: 'description', content: '在线扫描指定 IP 或域名的常见端口开放情况，检测服务暴露风险。' },
+    { name: 'description', content: t('在线扫描指定 IP 或域名的常见端口开放情况，检测服务暴露风险。') },
   ],
 });
 
@@ -30,12 +31,12 @@ const COMMON_PORTS = [
 
 function portName(port: number): string {
   const found = COMMON_PORTS.find(p => p.port === port);
-  return found ? found.name : '未知服务';
+  return found ? found.name : t('未知服务');
 }
 
 async function scan() {
   const t = target.value.trim();
-  if (!t) { error.value = '请输入 IP 或域名'; return; }
+  if (!t) { error.value = t('请输入 IP 或域名'); return; }
   loading.value = true;
   error.value = '';
   try {
@@ -43,7 +44,7 @@ async function scan() {
       (portsInput.value.trim() ? `?ports=${encodeURIComponent(portsInput.value.trim())}` : '');
     results.value = await $fetch(url);
   } catch (e: any) {
-    error.value = e?.message || '扫描失败';
+    error.value = e?.message || t('扫描失败');
   } finally {
     loading.value = false;
   }
@@ -53,34 +54,34 @@ async function scan() {
 <template>
   <div class="title">
     <header>
-      <h1>端口扫描</h1>
-      <p>检测目标 IP/域名的常见端口开放情况</p>
+      <h1>{{ $t('端口扫描') }}</h1>
+      <p>{{ $t('检测目标 IP/域名的常见端口开放情况') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-input v-model="target" placeholder="请输入 IP 或域名（如：8.8.8.8）" clearable @keyup.enter="scan" />
-      <el-button type="primary" :loading="loading" @click="scan">开始扫描</el-button>
+      <el-input v-model="target" :placeholder="$t('请输入 IP 或域名（如：8.8.8.8）')" clearable @keyup.enter="scan" />
+      <el-button type="primary" :loading="loading" @click="scan">{{ $t('开始扫描') }}</el-button>
     </div>
     <div class="ports-hint">
-      <p>自定义端口（逗号分隔，留空扫默认 26 个常见端口）：</p>
-      <el-input v-model="portsInput" placeholder="如：22,80,443,3306" clearable />
+      <p>{{ $t('自定义端口（逗号分隔，留空扫默认 26 个常见端口）：') }}</p>
+      <el-input v-model="portsInput" :placeholder="$t('如：22,80,443,3306')" clearable />
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
 
     <div v-if="results" class="result-section">
       <div class="scan-summary">
-        <span>目标: <b>{{ results.host }}</b></span>
-        <span>扫描端口: <b>{{ results.total }}</b></span>
-        <span>开放端口: <b class="open-count">{{ results.open }}</b></span>
+        <span>{{ $t('目标:') }} <b>{{ results.host }}</b></span>
+        <span>{{ $t('扫描端口:') }} <b>{{ results.total }}</b></span>
+        <span>{{ $t('开放端口:') }} <b class="open-count">{{ results.open }}</b></span>
       </div>
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">端口</th>
-            <th class="table-header">服务</th>
-            <th class="table-header">状态</th>
+            <th class="table-header">{{ $t('端口') }}</th>
+            <th class="table-header">{{ $t('服务') }}</th>
+            <th class="table-header">{{ $t('状态') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -97,7 +98,7 @@ async function scan() {
       </table>
     </div>
 
-    <blockquote>扫描基于 TCP 连接测试（2 秒超时），仅用于网络诊断，请勿用于非法用途。</blockquote>
+    <blockquote>{{ $t('扫描基于 TCP 连接测试（2 秒超时），仅用于网络诊断，请勿用于非法用途。') }}</blockquote>
   </div>
 </template>
 

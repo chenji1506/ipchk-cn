@@ -2,11 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
   title: 'IPv6 连通性检测 | ipchk.cn',
   meta: [
-    { name: 'description', content: '检测你的网络 IPv4 / IPv6 双栈连通性，展示 IPv4/IPv6 出口地址，判断网络是否支持 IPv6。' },
+    { name: 'description', content: t('检测你的网络 IPv4 / IPv6 双栈连通性，展示 IPv4/IPv6 出口地址，判断网络是否支持 IPv6。') },
     { name: 'keywords', content: 'IPv6连通性,双栈检测,ipv4检测,ipv6检测,ipv6支持,ipv6 connectivity' },
   ],
 })
@@ -87,10 +88,10 @@ const dualStack = computed(() => {
 
 const dualStackText = computed(() => {
   switch (dualStack.value) {
-    case 'dual': return '双栈网络（IPv4 + IPv6）'
-    case 'v4only': return '仅 IPv4'
-    case 'v6only': return '仅 IPv6'
-    default: return '检测中...'
+    case 'dual': return t('双栈网络（IPv4 + IPv6）')
+    case 'v4only': return t('仅 IPv4')
+    case 'v6only': return t('仅 IPv6')
+    default: return t('检测中...')
   }
 })
 
@@ -100,18 +101,18 @@ onMounted(detect)
 <template>
   <div class="title">
     <header>
-      <h1>IPv6 连通性检测</h1>
-      <p>检测你的网络 IPv4 / IPv6 双栈连通性，展示两个协议的出口地址</p>
+      <h1>{{ $t('IPv6 连通性检测') }}</h1>
+      <p>{{ $t('检测你的网络 IPv4 / IPv6 双栈连通性，展示两个协议的出口地址') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-button @click="detect()" type="primary" :loading="detecting">重新检测</el-button>
+      <el-button @click="detect()" type="primary" :loading="detecting">{{ $t('重新检测') }}</el-button>
     </div>
 
     <div class="status-banner" :class="'status-' + dualStack">
       <template v-if="detecting">
-        <el-icon class="is-loading"><i class="el-icon-loading" /></el-icon> 正在检测网络连通性...
+        <el-icon class="is-loading"><i class="el-icon-loading" /></el-icon> {{ $t('正在检测网络连通性...') }}
       </template>
       <template v-else>
         {{ dualStackText }}
@@ -128,10 +129,10 @@ onMounted(detect)
         </div>
         <div class="stack-ip">
           <code v-if="ipv4">{{ ipv4 }}</code>
-          <span v-else-if="v4Done" class="empty">未检测到 IPv4 出口</span>
-          <span v-else class="empty">检测中...</span>
+          <span v-else-if="v4Done" class="empty">{{ $t('未检测到 IPv4 出口') }}</span>
+          <span v-else class="empty">{{ $t('检测中...') }}</span>
         </div>
-        <div class="stack-desc">通过 IPv4 协议访问本站</div>
+        <div class="stack-desc">{{ $t('通过 IPv4 协议访问本站') }}</div>
       </div>
 
       <div class="stack-card">
@@ -143,16 +144,16 @@ onMounted(detect)
         </div>
         <div class="stack-ip">
           <code v-if="ipv6">{{ ipv6 }}</code>
-          <span v-else-if="v6Done" class="empty">未检测到 IPv6 出口</span>
-          <span v-else class="empty">检测中...</span>
+          <span v-else-if="v6Done" class="empty">{{ $t('未检测到 IPv6 出口') }}</span>
+          <span v-else class="empty">{{ $t('检测中...') }}</span>
         </div>
-        <div class="stack-desc">通过 IPv6 协议（含本机 WebRTC 探测）</div>
+        <div class="stack-desc">{{ $t('通过 IPv6 协议（含本机 WebRTC 探测）') }}</div>
       </div>
     </div>
 
     <blockquote>
-      IPv4 通过强制走 A 记录的子域检测；IPv6 通过强制 AAAA 记录的子域 + 浏览器 WebRTC 本机地址探测（二者取先到结果）。<br/>
-      「双栈」表示你的网络同时支持 IPv4 和 IPv6；「仅 IPv4」表示暂不支持 IPv6（国内多数宽带默认情况）。
+      {{ $t('IPv4 通过强制走 A 记录的子域检测；IPv6 通过强制 AAAA 记录的子域 + 浏览器 WebRTC 本机地址探测（二者取先到结果）。') }}<br/>
+      {{ $t('「双栈」表示你的网络同时支持 IPv4 和 IPv6；「仅 IPv4」表示暂不支持 IPv6（国内多数宽带默认情况）。') }}
     </blockquote>
   </div>
 </template>

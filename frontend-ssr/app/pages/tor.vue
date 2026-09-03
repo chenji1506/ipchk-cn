@@ -2,12 +2,13 @@
 import { ref, onMounted } from 'vue'
 
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
-  title: 'Tor 出口节点检测 | ipchk.cn',
+  title: () => `${t('Tor 出口节点检测')} | ipchk.cn`,
   meta: [
-    { name: 'description', content: '检测 IP 是否为 Tor 出口节点，基于 Tor 官方 DNSEL 数据源，免费无需密钥。' },
-    { name: 'keywords', content: 'Tor检测,Tor出口节点,匿名网络检测,暗网IP检测,tor exit node' },
+    { name: 'description', content: () => t('检测 IP 是否为 Tor 出口节点，基于 Tor 官方 DNSEL 数据源，免费无需密钥。') },
+    { name: 'keywords', content: 'Tor detection,Tor exit node,anonymous network,tor exit node' },
   ],
 })
 
@@ -36,14 +37,14 @@ async function queryTor() {
     tmpip.value = ip
   }
   if (!ip) {
-    error.value = '请输入 IP 地址'
+    error.value = t('请输入 IP 地址')
     loading.value = false
     return
   }
   try {
     result.value = await $fetch(config.apiBaseUrls[0].url + 'v1/tor/' + encodeURIComponent(ip))
   } catch (e: any) {
-    error.value = e?.message || '请求失败，请重试'
+    error.value = e?.message || t('请求失败，请重试')
   } finally {
     loading.value = false
   }
@@ -55,14 +56,14 @@ onMounted(getUserIP)
 <template>
   <div class="title">
     <header>
-      <h1>Tor 出口节点检测</h1>
-      <p>检测 IP 是否为 Tor 出口节点，基于 Tor 官方 DNSEL 数据源</p>
+      <h1>{{ $t('Tor 出口节点检测') }}</h1>
+      <p>{{ $t('检测 IP 是否为 Tor 出口节点，基于 Tor 官方 DNSEL 数据源') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-input v-model="tmpip" placeholder="输入 IP（留空则检测你的 IP）" @keyup.enter="queryTor()" />
-      <el-button @click="queryTor()" type="primary" :loading="loading">检测</el-button>
+      <el-input v-model="tmpip" :placeholder="$t('输入 IP（留空则检测你的 IP）')" @keyup.enter="queryTor()" />
+      <el-button @click="queryTor()" type="primary" :loading="loading">{{ $t('检测') }}</el-button>
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
@@ -79,17 +80,17 @@ onMounted(getUserIP)
       <table class="result-table">
         <tbody>
           <tr>
-            <td class="table-label">检测 IP</td>
+            <td class="table-label">{{ $t('检测 IP') }}</td>
             <td class="table-value"><code>{{ result.ip }}</code></td>
           </tr>
           <tr>
-            <td class="table-label">是否 Tor 出口</td>
+            <td class="table-label">{{ $t('是否 Tor 出口') }}</td>
             <td class="table-value">
-              <span :class="result.is_tor ? 'badge-red' : 'badge-green'">{{ result.is_tor ? '是' : '否' }}</span>
+              <span :class="result.is_tor ? 'badge-red' : 'badge-green'">{{ result.is_tor ? $t('是') : $t('否') }}</span>
             </td>
           </tr>
           <tr>
-            <td class="table-label">检测时间</td>
+            <td class="table-label">{{ $t('检测时间') }}</td>
             <td class="table-value">{{ result.checked_at }}</td>
           </tr>
         </tbody>
@@ -97,9 +98,9 @@ onMounted(getUserIP)
     </div>
 
     <blockquote>
-      数据来源：Tor 官方 DNSEL（dnsel.torproject.org），通过反向 DNS 查询判断 IP 是否在 Tor 出口列表。<br/>
-      仅支持 IPv4；IPv6 暂不支持。检测结果存在几分钟缓存延迟。<br/>
-      访客IP: {{ userIP || '获取中...' }}
+      {{ $t('数据来源：Tor 官方 DNSEL（dnsel.torproject.org），通过反向 DNS 查询判断 IP 是否在 Tor 出口列表。') }}<br/>
+      {{ $t('仅支持 IPv4；IPv6 暂不支持。检测结果存在几分钟缓存延迟。') }}<br/>
+      {{ $t('访客IP:') }} {{ userIP || $t('获取中...') }}
     </blockquote>
   </div>
 </template>

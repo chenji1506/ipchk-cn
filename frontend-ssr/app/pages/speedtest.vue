@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { extractHost, formatTime, formatSpeed, formatSize, getStatusCodeClass } from '../../utils/tools';
 
 
@@ -131,7 +132,7 @@ async function SpeedTest() {
       await fetch.execute()
       row.data = fetch.data.value
     } catch (err: any) {
-      row.error = err?.data?.error || err?.message || '请求失败'
+      row.error = err?.data?.error || err?.message || t('请求失败')
     } finally {
       row.loading = false
     }
@@ -156,22 +157,22 @@ onMounted(() => {
 <template>
   <div class="title">
     <header>
-      <h1>IPv4 网站测速</h1>
-      <p>全国并发测速，1s 内快速返回测速结果</p>
+      <h1>{{ $t('IPv4 网站测速') }}</h1>
+      <p>{{ $t('全国并发测速，1s 内快速返回测速结果') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：https://ipchk.cn）" 
+        :placeholder="$t('请输入域名（如：https://ipchk.cn）')" 
       />
       <el-button 
         @click="SpeedTest()" 
         type="primary" 
         :loading="loading"
       >
-        开始测试
+        {{ $t('开始测试') }}
       </el-button>
     </div>
 
@@ -183,15 +184,15 @@ onMounted(() => {
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">测速服务器</th>
-            <th class="table-header">解析 IP</th>
-            <th class="table-header">HTTP状态码</th>
-            <th class="table-header">HTTPS状态码</th>
-            <th class="table-header">总时间</th>
-            <th class="table-header">解析时间</th>
-            <th class="table-header">HTTP连接</th>
-            <th class="table-header">网页大小</th>
-            <th class="table-header">下载速度</th>
+            <th class="table-header">{{ $t('测速服务器') }}</th>
+            <th class="table-header">{{ $t('解析 IP') }}</th>
+            <th class="table-header">{{ $t('HTTP状态码') }}</th>
+            <th class="table-header">{{ $t('HTTPS状态码') }}</th>
+            <th class="table-header">{{ $t('总时间') }}</th>
+            <th class="table-header">{{ $t('解析时间') }}</th>
+            <th class="table-header">{{ $t('HTTP连接') }}</th>
+            <th class="table-header">{{ $t('网页大小') }}</th>
+            <th class="table-header">{{ $t('下载速度') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -206,7 +207,7 @@ onMounted(() => {
             <!-- 加载中 -->
             <tr v-else-if="row.loading">
               <td class="table-label">{{ row.label }}</td>
-              <td class="table-value" colspan="8">测速中...</td>
+              <td class="table-value" colspan="8">{{ $t('测速中...') }}</td>
             </tr>
             <!-- 有结果 -->
             <tr v-else-if="row.data">

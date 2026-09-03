@@ -3,12 +3,19 @@ import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
 import { useDark, useToggle } from '@vueuse/core';
 import { Moon, Sunny, Expand } from '@element-plus/icons-vue';
 const config = useIpchkConfig()
+const { locale, setLocale } = useI18n()
+const localePath = useLocalePath()
+const switchLocalePath = useSwitchLocalePath()
+function toggleLang() {
+  const target = locale.value === 'zh' ? 'en' : 'zh'
+  navigateTo(switchLocalePath(target))
+}
 
 const route = useRoute();
 
 // 根据当前路由计算高亮的菜单项（对应 el-menu 的 index）
 const activeMenu = computed(() => {
-  const p = route.path;
+  const p = route.path.replace(/^\/en(?=\/|$)/, '');
   if (p === '/purity') return '1';
   if (p === '/rbl' || p.startsWith('/rbl')) return '5';
   if (p.startsWith('/ipv6webcheck')) return '2-0';
@@ -84,48 +91,48 @@ useHead({
   
   <el-drawer v-model="drawer" direction="ltr" style="height: 100%;" size="50%">
       <div class="drawer-section">
-        <p class="drawer-title">常用</p>
-        <router-link to="/purity" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">IP纯净度检测</p>
+        <p class="drawer-title">{{ $t('常用') }}</p>
+        <router-link :to="localePath('/purity')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('IP纯净度检测') }}</p>
         </router-link>
-        <router-link to="/rbl" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">邮件黑名单检测</p>
+        <router-link :to="localePath('/rbl')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('邮件黑名单检测') }}</p>
         </router-link>
       </div>
       <div class="drawer-section">
-        <p class="drawer-title">IPv6 工具箱</p>
-        <router-link to="/ipv6webcheck" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">IPv6 网站检测</p>
+        <p class="drawer-title">{{ $t('IPv6 工具箱') }}</p>
+        <router-link :to="localePath('/ipv6webcheck')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 网站检测') }}</p>
         </router-link>
-        <router-link to="/location" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">IPv6/IPv4 地址查询</p>
+        <router-link :to="localePath('/location')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('IPv6/IPv4 地址查询') }}</p>
         </router-link>
-        <router-link to="/ipv6tcping" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">IPv6 TCPing</p>
+        <router-link :to="localePath('/ipv6tcping')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 TCPing') }}</p>
         </router-link>
-        <router-link to="/dns"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 DNS解析</p></router-link>
-        <router-link to="/ssl" style="font-size: 1em;">
-          <p style="display: inline-block; margin-left: 10px">IPv6 SSL检查</p>
+        <router-link :to="localePath('/dns')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 DNS解析') }}</p></router-link>
+        <router-link :to="localePath('/ssl')" style="font-size: 1em;">
+          <p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 SSL检查') }}</p>
         </router-link>
-        <a href="/ipv6speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 网站测速</p></a>
-        <router-link to="/ipv6-connectivity" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 连通性检测</p></router-link>
+        <a :href="localePath('/ipv6speedtest')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 网站测速') }}</p></a>
+        <router-link :to="localePath('/ipv6-connectivity')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 连通性检测') }}</p></router-link>
       </div>
       <div class="drawer-section">
-        <p class="drawer-title">IPv4 工具箱</p>
-        <a href="/speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv4 网站测速</p></a>
-        <a href="/tcping"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv4 TCPing</p></a>
+        <p class="drawer-title">{{ $t('IPv4 工具箱') }}</p>
+        <a :href="localePath('/speedtest')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv4 网站测速') }}</p></a>
+        <a :href="localePath('/tcping')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv4 TCPing') }}</p></a>
       </div>
       <div class="drawer-section">
-        <p class="drawer-title">更多工具</p>
-        <router-link to="/batch" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">批量 IP 查询</p></router-link>
-        <router-link to="/scan" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">端口扫描</p></router-link>
-        <router-link to="/whois" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Whois 查询</p></router-link>
-        <router-link to="/leak" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">隐私泄露检测</p></router-link>
-        <router-link to="/cidr" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">子网计算器</p></router-link>
-        <router-link to="/api" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">API 文档</p></router-link>
-        <router-link to="/tor" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Tor 出口检测</p></router-link>
-        <router-link to="/security" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">网站检测</p></router-link>
-        <router-link to="/dns-pollution" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">DNS 污染检测</p></router-link>
+        <p class="drawer-title">{{ $t('更多工具') }}</p>
+        <router-link :to="localePath('/batch')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('批量 IP 查询') }}</p></router-link>
+        <router-link :to="localePath('/scan')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('端口扫描') }}</p></router-link>
+        <router-link :to="localePath('/whois')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Whois 查询') }}</p></router-link>
+        <router-link :to="localePath('/leak')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('隐私泄露检测') }}</p></router-link>
+        <router-link :to="localePath('/cidr')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('子网计算器') }}</p></router-link>
+        <router-link :to="localePath('/api')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('API 文档') }}</p></router-link>
+        <router-link :to="localePath('/tor')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Tor 出口检测') }}</p></router-link>
+        <router-link :to="localePath('/security')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('网站检测') }}</p></router-link>
+        <router-link :to="localePath('/dns-pollution')" style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('DNS 污染检测') }}</p></router-link>
       </div>
   </el-drawer>
   <el-menu
@@ -135,7 +142,7 @@ useHead({
     >
     <el-menu-item index="0">
       <el-icon v-if="isNarrow" @click="drawer = !drawer"><Expand /></el-icon>
-      <router-link to="/">
+      <router-link :to="localePath('/')">
         <img
           src="/favicon.svg"
           alt="IPW logo"
@@ -149,80 +156,80 @@ useHead({
     </el-menu-item>
     
     <el-menu-item index="1" v-if="!isNarrow">
-      <router-link to="/purity" style="font-size: 1em;">
-        <p style="display: inline-block; margin-left: 10px">IP纯净度检测</p>
+      <router-link :to="localePath('/purity')" style="font-size: 1em;">
+        <p style="display: inline-block; margin-left: 10px">{{ $t('IP纯净度检测') }}</p>
       </router-link>
     </el-menu-item>
 
     <el-menu-item index="5" v-if="!isNarrow">
-      <router-link to="/rbl" style="font-size: 1em;">
-        <p style="display: inline-block; margin-left: 10px">邮件黑名单检测</p>
+      <router-link :to="localePath('/rbl')" style="font-size: 1em;">
+        <p style="display: inline-block; margin-left: 10px">{{ $t('邮件黑名单检测') }}</p>
       </router-link>
     </el-menu-item>
 
     <el-sub-menu index="2" v-if="!isNarrow">
-      <template #title>IPv6 工具箱</template>
+      <template #title>{{ $t('IPv6 工具箱') }}</template>
       <el-menu-item index="2-0">
-        <router-link to="/ipv6webcheck"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 网站检测</p></router-link>
+        <router-link :to="localePath('/ipv6webcheck')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 网站检测') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-1">
-        <router-link to="/location"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6/IPv4 地址查询</p></router-link>
+        <router-link :to="localePath('/location')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6/IPv4 地址查询') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-2">
-        <router-link to="/ipv6tcping"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 TCPing测试</p></router-link>
+        <router-link :to="localePath('/ipv6tcping')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 TCPing测试') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-3">
-        <router-link to="/dns"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 DNS解析</p></router-link>
+        <router-link :to="localePath('/dns')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 DNS解析') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-4">
-        <router-link to="/ssl"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 SSL检查</p></router-link>
+        <router-link :to="localePath('/ssl')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 SSL检查') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-5">
-        <router-link to="/ipv6speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 网站测速</p></router-link>
+        <router-link :to="localePath('/ipv6speedtest')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 网站测速') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="2-6">
-        <router-link to="/ipv6-connectivity"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv6 连通性检测</p></router-link>
+        <router-link :to="localePath('/ipv6-connectivity')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv6 连通性检测') }}</p></router-link>
       </el-menu-item>
     </el-sub-menu>
 
     <el-sub-menu index="3" v-if="!isNarrow">
-      <template #title>IPv4 工具箱</template>
+      <template #title>{{ $t('IPv4 工具箱') }}</template>
       <el-menu-item index="3-0">
-        <router-link to="/speedtest"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv4 网站测速</p></router-link>
+        <router-link :to="localePath('/speedtest')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv4 网站测速') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="3-1">
-        <router-link to="/tcping"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">IPv4 TCPing测试</p></router-link>
+        <router-link :to="localePath('/tcping')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('IPv4 TCPing测试') }}</p></router-link>
       </el-menu-item>
     </el-sub-menu>
 
     <el-sub-menu index="4" v-if="!isNarrow">
-      <template #title>更多工具</template>
+      <template #title>{{ $t('更多工具') }}</template>
       <el-menu-item index="4-0">
-        <router-link to="/batch"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">批量 IP 查询</p></router-link>
+        <router-link :to="localePath('/batch')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('批量 IP 查询') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-1">
-        <router-link to="/scan"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">端口扫描</p></router-link>
+        <router-link :to="localePath('/scan')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('端口扫描') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-2">
-        <router-link to="/whois"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Whois 查询</p></router-link>
+        <router-link :to="localePath('/whois')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Whois 查询') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-3">
-        <router-link to="/leak"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">隐私泄露检测</p></router-link>
+        <router-link :to="localePath('/leak')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('隐私泄露检测') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-4">
-        <router-link to="/cidr"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">子网计算器</p></router-link>
+        <router-link :to="localePath('/cidr')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('子网计算器') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-5">
-        <router-link to="/api"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">API 文档</p></router-link>
+        <router-link :to="localePath('/api')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('API 文档') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-6">
-        <router-link to="/tor"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">Tor 出口检测</p></router-link>
+        <router-link :to="localePath('/tor')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('Tor 出口检测') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-7">
-        <router-link to="/security"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">网站检测</p></router-link>
+        <router-link :to="localePath('/security')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('网站检测') }}</p></router-link>
       </el-menu-item>
       <el-menu-item index="4-8">
-        <router-link to="/dns-pollution"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">DNS 污染检测</p></router-link>
+        <router-link :to="localePath('/dns-pollution')"  style="font-size: 1em;"><p style="display: inline-block; margin-left: 10px">{{ $t('DNS 污染检测') }}</p></router-link>
       </el-menu-item>
     </el-sub-menu>
 
@@ -238,6 +245,11 @@ useHead({
       <ClientOnly>
       <el-icon @click="toggleDark()" v-if="isDark" style="cursor: pointer;"><Moon style="height: 20px; width: 20px;"/></el-icon>
       <el-icon @click="toggleDark()" v-else style="cursor: pointer;"><Sunny style="height: 20px; width: 20px;"/></el-icon>
+      </ClientOnly>
+    </el-menu-item>
+    <el-menu-item index="11">
+      <ClientOnly>
+      <button class="lang-switch" @click="toggleLang()">{{ locale === 'zh' ? 'EN' : '中文' }}</button>
       </ClientOnly>
     </el-menu-item>
 
@@ -292,6 +304,16 @@ useHead({
   margin-bottom: 20px;
   
 }
+.lang-switch {
+  border: 1px solid #3EAF7C;
+  background: transparent;
+  color: #3EAF7C;
+  border-radius: 4px;
+  padding: 3px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+.lang-switch:hover { background: #3EAF7C; color: #fff; }
 </style>
 <style>
 :root {

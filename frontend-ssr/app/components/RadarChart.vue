@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { computed } from 'vue';
 
 // 五维雷达：信誉/一致/黑名单/稳定/数据质量
@@ -18,11 +19,11 @@ const radius = computed(() => size.value * 0.36);
 
 // 固定轴顺序 + 中文标签
 const AXES = [
-  { key: 'reputation', label: '信誉' },
-  { key: 'consistency', label: '一致' },
-  { key: 'rbl', label: '黑名单' },
-  { key: 'stability', label: '稳定' },
-  { key: 'data_quality', label: '数据' },
+  { key: 'reputation', label: t('信誉') },
+  { key: 'consistency', label: t('一致') },
+  { key: 'rbl', label: t('黑名单') },
+  { key: 'stability', label: t('稳定') },
+  { key: 'data_quality', label: t('数据') },
 ];
 
 // 每个维度的归一化百分比 0-100

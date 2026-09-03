@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { isIPv6 } from 'is-ip';
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { CircleCheckFilled, CircleCloseFilled } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router'
 import { highlightCode } from '../../utils/shiki'
@@ -89,12 +90,12 @@ watch(locationError, async (newError) => {
     console.error('Error fetching IP location:', newError);
     if (currentApiIndex.value < apiList.length - 1) {
       const nextIndex = currentApiIndex.value + 1
-      error.value = `${(newError as any).message || '请求失败'}，正在重试 ${apiList[nextIndex].label}...`
+      error.value = `${(newError as any).message || t('请求失败')}，正在重试 ${apiList[nextIndex].label}...`
       currentApiIndex.value = nextIndex
       await nextTick()
       executeLocation()
     } else {
-      error.value = '请求失败，请检查网络或稍后重试'
+      error.value = t('请求失败，请检查网络或稍后重试')
       loading.value = false;
     }
   }
@@ -135,15 +136,15 @@ onMounted(async () => {
 <template>
   <div class="title">
     <header>
-      <h1>IPv6/IPv4地址归属地查询</h1>
-      <p>极简的IPv6地址查询工具，致力于普及 IPv6</p>
+      <h1>{{ $t('IPv6/IPv4地址归属地查询') }}</h1>
+      <p>{{ $t('极简的IPv6地址查询工具，致力于普及 IPv6') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
       <el-input 
         v-model="ipAddress" 
-        placeholder="请输入IP地址" 
+        :placeholder="$t('请输入IP地址')" 
       />
       <el-button 
         @click="locateIP(ipAddress)" 
@@ -151,7 +152,7 @@ onMounted(async () => {
         :loading="loading"
       
       >
-        查询
+        {{ $t('查询') }}
       </el-button>
     </div>
     <div v-if="error" class="error-message">
@@ -178,7 +179,7 @@ onMounted(async () => {
                 </td>
               </tr>
               <tr v-if="IPLocation.bilibili && (IPLocation.bilibili.administrative_area || IPLocation.bilibili.city)">
-                <td class="table-label">bilibili Live接口</td>
+                <td class="table-label">{{ $t('bilibili Live接口') }}</td>
                 <td class="table-value">
                   <span>
                     {{ IPLocation.bilibili?.country }}&nbsp;{{ IPLocation.bilibili?.administrative_area }}&nbsp;{{ IPLocation.bilibili?.city }}
@@ -196,7 +197,7 @@ onMounted(async () => {
                 <td class="table-value">{{ IPLocation.ip2region?.split("|")[3] }}</td>
               </tr>
               <tr v-if="IPLocation.geocn && (IPLocation.geocn.administrative_area || IPLocation.geocn.city || IPLocation.geocn.district)">
-                <td class="table-label">GeoCN(仅中国大陆)</td>
+                <td class="table-label">{{ $t('GeoCN(仅中国大陆)') }}</td>
                 <td class="table-value">{{ IPLocation.geocn?.administrative_area }}&nbsp;{{ IPLocation.geocn?.city }}&nbsp;{{ IPLocation.geocn?.district }}</td>
                 <td class="table-value">{{ IPLocation.geocn?.isp }}</td>
               </tr>
@@ -206,7 +207,7 @@ onMounted(async () => {
                 <td class="table-value">{{ IPLocation.maxmind_asn?.org }}</td>
               </tr>
               <tr v-if="IPLocation.qqwry && (IPLocation.qqwry.country || IPLocation.qqwry.administrative_area || IPLocation.qqwry.city)">
-                <td class="table-label">纯真社区库</td>
+                <td class="table-label">{{ $t('纯真社区库') }}</td>
                 <td class="table-value">{{ IPLocation.qqwry?.country }}&nbsp;{{ IPLocation.qqwry?.administrative_area }}&nbsp;{{ IPLocation.qqwry?.city }}</td>
                 <td class="table-value">{{ IPLocation.qqwry?.isp }}</td>
               </tr>
@@ -220,16 +221,16 @@ onMounted(async () => {
         </div>
     </div>
     <div style="font-size: 1.5em;">
-      <h3 v-if="isIPv6(UserIP)"><el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>您的网络IPv6优先</h3>
-      <h3 v-else-if="isIPv4(UserIP)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>您的网络IPv4优先</h3>
+      <h3 v-if="isIPv6(UserIP)"><el-icon><CircleCheckFilled style="color: lightgreen;"/></el-icon>{{ $t('您的网络IPv6优先') }}</h3>
+      <h3 v-else-if="isIPv4(UserIP)"><el-icon><CircleCloseFilled style="color: red;"/></el-icon>{{ $t('您的网络IPv4优先') }}</h3>
     </div>
     <blockquote>
-      数据来源：<br>
-      归属地数据由 ip-api.com 免费接口提供（数据含国家/省/市/运营商），查询结果缓存 24 小时。<br>
-      当 API 不可用时自动回退本地数据库（ip2region、纯真社区库、DB-IP 等）。<br>
+      {{ $t('数据来源：') }}<br>
+      {{ $t('归属地数据由 ip-api.com 免费接口提供（数据含国家/省/市/运营商），查询结果缓存 24 小时。') }}<br>
+      {{ $t('当 API 不可用时自动回退本地数据库（ip2region、纯真社区库、DB-IP 等）。') }}<br>
       <br>
-      手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。<br>
-      访客IP: {{UserIP}}，<p v-if="isIPv4(UserIP)">您的网络IPv4优先</p><p v-else-if="isIPv6(UserIP)">您的网络IPv6优先</p>
+      {{ $t('手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。') }}<br>
+      访客IP: {{UserIP}}，<p v-if="isIPv4(UserIP)">{{ $t('您的网络IPv4优先') }}</p><p v-else-if="isIPv6(UserIP)">{{ $t('您的网络IPv6优先') }}</p>
     </blockquote>
 
     <div v-html="html"></div>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { ref, computed, onMounted } from 'vue';
 
 useHead({
   title: 'IP纯净度检测工具 | IP风险评分 | ipchk.cn',
   meta: [
-    { name: 'description', content: '批量检测 IP 纯净度、归属类型、代理风险、邮件黑名单与网络质量，多源证据交叉验证。' },
+    { name: 'description', content: t('批量检测 IP 纯净度、归属类型、代理风险、邮件黑名单与网络质量，多源证据交叉验证。') },
     { name: 'keywords', content: 'ip纯净度,ip风险检测,ip评分,代理检测,vpn检测,数据中心检测,黑名单检测' },
   ],
 });
@@ -125,11 +126,11 @@ async function fillCurrentExit() {
 async function runCheck() {
   const ips = parseIPs(inputText.value);
   if (ips.length === 0) {
-    error.value = '请输入至少一个 IP 地址';
+    error.value = t('请输入至少一个 IP 地址');
     return;
   }
   if (ips.length > 10) {
-    error.value = '单次最多检测 10 个 IP，已截断前 10 个';
+    error.value = t('单次最多检测 10 个 IP，已截断前 10 个');
   }
   loading.value = true;
   error.value = '';
@@ -140,7 +141,7 @@ async function runCheck() {
       body: JSON.stringify({ ips: ips.slice(0, 10) }),
     });
     if (!data.ok) {
-      error.value = data.error || '检测失败，请稍后重试';
+      error.value = data.error || t('检测失败，请稍后重试');
       reports.value = [];
       return;
     }
@@ -149,11 +150,11 @@ async function runCheck() {
     if (invalid > 0) {
       error.value = `已忽略 ${invalid} 条无效输入`;
     } else if (reports.value.length === 0) {
-      error.value = '未返回有效结果';
+      error.value = t('未返回有效结果');
     }
     selectedIp.value = reports.value[0]?.ip || null;
   } catch (e: any) {
-    error.value = e?.message || '检测失败，请稍后重试';
+    error.value = e?.message || t('检测失败，请稍后重试');
     reports.value = [];
   } finally {
     loading.value = false;
@@ -162,11 +163,11 @@ async function runCheck() {
 
 const activeTab = ref<'overview' | 'scenario' | 'quality'>('overview');
 const dimensionLegend: Record<string, string> = {
-  reputation: '信誉', consistency: '一致', rbl: '黑名单',
-  stability: '稳定', data_quality: '数据',
+  reputation: t('信誉'), consistency: t('一致'), rbl: t('黑名单'),
+  stability: t('稳定'), data_quality: t('数据'),
 };
 const tabLabels: Record<string, string> = {
-  overview: '概览', scenario: '场景风险', quality: '网络质量',
+  overview: t('概览'), scenario: t('场景风险'), quality: t('网络质量'),
 };
 
 function rankScoreTone(score: number): string {
@@ -176,12 +177,12 @@ function rankScoreTone(score: number): string {
 }
 
 function rblText(r: PurityReport): string {
-  if (!r.rbl?.probed) return '未启用';
-  if (r.rbl.query_limited) return '查询受限';
+  if (!r.rbl?.probed) return t('未启用');
+  if (r.rbl.query_limited) return t('查询受限');
   if (r.rbl.listed_count > 0 || r.rbl.network_listed_count > 0) {
     return `命中 ${r.rbl.listed_count} 单 IP / ${r.rbl.network_listed_count} 网段`;
   }
-  return '未检出';
+  return t('未检出');
 }
 
 async function copyIP(ip: string) {
@@ -198,8 +199,8 @@ onMounted(() => {
 <template>
   <div class="title">
     <header>
-      <h1>IP 纯净度检测</h1>
-      <p>批量检测 IP 纯净度 · 归属类型 · 代理风险 · 网络质量</p>
+      <h1>{{ $t('IP 纯净度检测') }}</h1>
+      <p>{{ $t('批量检测 IP 纯净度 · 归属类型 · 代理风险 · 网络质量') }}</p>
     </header>
   </div>
 
@@ -207,9 +208,9 @@ onMounted(() => {
     <!-- 输入区 -->
     <div class="input-panel">
       <div class="input-head">
-        <span class="input-hint">支持批量检测，每行一个 IP，或用逗号 / 空格分隔（最多 10 个）</span>
+        <span class="input-hint">{{ $t('支持批量检测，每行一个 IP，或用逗号 / 空格分隔（最多 10 个）') }}</span>
         <el-button size="small" text @click="fillCurrentExit">
-          填入当前出口 IP
+          {{ $t('填入当前出口 IP') }}
         </el-button>
       </div>
       <el-input
@@ -220,9 +221,9 @@ onMounted(() => {
       />
       <div class="input-actions">
         <el-button type="primary" :loading="loading" @click="runCheck">
-          开始检测
+          {{ $t('开始检测') }}
         </el-button>
-        <el-button text @click="inputText = ''">清空</el-button>
+        <el-button text @click="inputText = ''">{{ $t('清空') }}</el-button>
         <span v-if="currentExitIp" class="exit-hint">当前出口：{{ currentExitIp }}</span>
       </div>
     </div>
@@ -234,7 +235,7 @@ onMounted(() => {
       <!-- 左侧：排序卡片 -->
       <div class="rank-list">
         <div class="rank-header">
-          <span>检测结果</span>
+          <span>{{ $t('检测结果') }}</span>
           <span class="rank-count">{{ reports.length }} 个</span>
         </div>
         <div
@@ -269,8 +270,8 @@ onMounted(() => {
           <span class="dossier-kicker">IP DOSSIER</span>
           <div class="dossier-ip">
             <h2>{{ currentReport.ip }}</h2>
-            <button class="copy-btn" type="button" title="复制 IP" @click="copyIP(currentReport.ip)">
-              <span>复制</span>
+            <button class="copy-btn" type="button" :title="$t('复制 IP')" @click="copyIP(currentReport.ip)">
+              <span>{{ $t('复制') }}</span>
             </button>
           </div>
         </div>
@@ -280,17 +281,17 @@ onMounted(() => {
           <ScoreRing :score="currentReport.score" :size="110" label="/ 100" />
           <div class="score-summary">
             <div class="score-line">
-              <label>综合质量分</label>
+              <label>{{ $t('综合质量分') }}</label>
               <strong :style="{ color: toneColor(rankScoreTone(currentReport.score)) }">{{ currentReport.score }}</strong>
               <small>纯净度 {{ currentReport.score_formula?.purity_weight }}% · 网络 {{ currentReport.score_formula?.stability_weight }}% · 数据 {{ currentReport.score_formula?.data_quality_weight }}%</small>
             </div>
             <div class="score-line">
-              <label>IP 纯净度</label>
+              <label>{{ $t('IP 纯净度') }}</label>
               <strong :style="{ color: toneColor(currentReport.purity.tone) }">{{ currentReport.purity.score }}</strong>
               <small>{{ currentReport.purity.label }} · {{ currentReport.purity.confidence_label }}</small>
             </div>
             <div class="score-line">
-              <label>主要类型</label>
+              <label>{{ $t('主要类型') }}</label>
               <strong :style="{ color: toneColor(currentReport.profile?.primary_tone) }">{{ currentReport.ip_type }}</strong>
               <small>{{ currentReport.profile?.source_count }} 个来源参与判断</small>
             </div>
@@ -312,40 +313,40 @@ onMounted(() => {
         <div v-if="activeTab === 'overview'" class="tab-panel">
           <!-- 综合结论 -->
           <section class="detail-section">
-            <h4>结论与原因</h4>
+            <h4>{{ $t('结论与原因') }}</h4>
             <div class="conclusion">
               <p class="conclusion-summary">{{ currentReport.profile?.summary }}</p>
               <ul class="reason-list">
                 <li v-for="(reason, i) in currentReport.purity.reasons" :key="i">{{ reason }}</li>
               </ul>
               <p class="recommendation">
-                <i class="rec-label">建议</i> {{ currentReport.recommendation }}
+                <i class="rec-label">{{ $t('建议') }}</i> {{ currentReport.recommendation }}
               </p>
             </div>
           </section>
 
           <!-- 五维画像 -->
           <section class="detail-section">
-            <h4>IP 画像</h4>
+            <h4>{{ $t('IP 画像') }}</h4>
             <div class="profile-grid">
               <div class="profile-row">
-                <span class="p-label">IP 来源</span>
+                <span class="p-label">{{ $t('IP 来源') }}</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.profile?.native_tone) }">{{ currentReport.profile?.native }}</span>
               </div>
               <div class="profile-row">
-                <span class="p-label">IP 属性</span>
+                <span class="p-label">{{ $t('IP 属性') }}</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.profile?.primary_tone) }">{{ currentReport.profile?.primary }}</span>
               </div>
               <div class="profile-row">
-                <span class="p-label">接入网络</span>
+                <span class="p-label">{{ $t('接入网络') }}</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.profile?.access_network?.tone) }">{{ currentReport.profile?.access_network?.label }}</span>
               </div>
               <div class="profile-row">
-                <span class="p-label">代理状态</span>
+                <span class="p-label">{{ $t('代理状态') }}</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.profile?.risk_tone) }">{{ currentReport.profile?.risk }}</span>
               </div>
               <div class="profile-row">
-                <span class="p-label">邮件黑名单</span>
+                <span class="p-label">{{ $t('邮件黑名单') }}</span>
                 <span class="p-value" :style="{ color: toneColor(currentReport.rbl?.probed ? (currentReport.rbl.listed_count > 0 ? 'bad' : 'good') : 'neutral') }">
                   {{ rblText(currentReport) }}
                 </span>
@@ -358,12 +359,12 @@ onMounted(() => {
 
           <!-- 基础信息 -->
           <section class="detail-section">
-            <h4>基础信息</h4>
+            <h4>{{ $t('基础信息') }}</h4>
             <div class="base-grid">
-              <div class="base-row"><span>归属地</span><b>{{ currentReport.country }} {{ currentReport.region }} {{ currentReport.city }}</b></div>
+              <div class="base-row"><span>{{ $t('归属地') }}</span><b>{{ currentReport.country }} {{ currentReport.region }} {{ currentReport.city }}</b></div>
               <div class="base-row"><span>ASN</span><b>{{ currentReport.asOrganization || '未知' }}</b></div>
-              <div class="base-row"><span>运营商</span><b>{{ currentReport.isp || '--' }}</b></div>
-              <div class="base-row"><span>数据来源</span><b class="source-text">{{ currentReport.source }}</b></div>
+              <div class="base-row"><span>{{ $t('运营商') }}</span><b>{{ currentReport.isp || '--' }}</b></div>
+              <div class="base-row"><span>{{ $t('数据来源') }}</span><b class="source-text">{{ currentReport.source }}</b></div>
             </div>
           </section>
         </div>
@@ -371,13 +372,13 @@ onMounted(() => {
         <!-- 场景风险 -->
         <div v-if="activeTab === 'scenario'" class="tab-panel">
           <ScenarioRisk :report="currentReport" />
-          <p class="disclaimer">基于当前 IP 画像与公开信誉估算，不代表目标平台实际可用或账号安全。</p>
+          <p class="disclaimer">{{ $t('基于当前 IP 画像与公开信誉估算，不代表目标平台实际可用或账号安全。') }}</p>
         </div>
 
         <!-- 网络质量 -->
         <div v-if="activeTab === 'quality'" class="tab-panel">
           <section class="detail-section">
-            <h4>五维评分</h4>
+            <h4>{{ $t('五维评分') }}</h4>
             <div class="radar-center">
               <RadarChart :dimensions="currentReport.dimensions" :size="240" />
             </div>
@@ -388,21 +389,21 @@ onMounted(() => {
             </div>
           </section>
           <section class="detail-section">
-            <h4>网络稳定性</h4>
+            <h4>{{ $t('网络稳定性') }}</h4>
             <div v-if="currentReport.stability?.probed" class="quality-grid">
-              <div class="quality-row"><span>成功率</span><b>{{ (currentReport.stability.success_rate * 100).toFixed(0) }}%</b></div>
-              <div class="quality-row"><span>平均延迟</span><b>{{ currentReport.stability.avg_latency_ms.toFixed(1) }} ms</b></div>
-              <div class="quality-row"><span>P50 延迟</span><b>{{ currentReport.stability.p50_latency_ms.toFixed(1) }} ms</b></div>
-              <div class="quality-row"><span>P95 延迟</span><b>{{ currentReport.stability.p95_latency_ms.toFixed(1) }} ms</b></div>
+              <div class="quality-row"><span>{{ $t('成功率') }}</span><b>{{ (currentReport.stability.success_rate * 100).toFixed(0) }}%</b></div>
+              <div class="quality-row"><span>{{ $t('平均延迟') }}</span><b>{{ currentReport.stability.avg_latency_ms.toFixed(1) }} ms</b></div>
+              <div class="quality-row"><span>{{ $t('P50 延迟') }}</span><b>{{ currentReport.stability.p50_latency_ms.toFixed(1) }} ms</b></div>
+              <div class="quality-row"><span>{{ $t('P95 延迟') }}</span><b>{{ currentReport.stability.p95_latency_ms.toFixed(1) }} ms</b></div>
             </div>
-            <p v-else class="quality-empty">稳定性探测未启用</p>
+            <p v-else class="quality-empty">{{ $t('稳定性探测未启用') }}</p>
           </section>
           <section class="detail-section">
-            <h4>邮件黑名单（RBL）</h4>
+            <h4>{{ $t('邮件黑名单（RBL）') }}</h4>
             <div class="quality-grid">
-              <div class="quality-row"><span>单 IP 命中</span><b :style="{ color: currentReport.rbl.listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.listed_count }}</b></div>
-              <div class="quality-row"><span>上游网段命中</span><b :style="{ color: currentReport.rbl.network_listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.network_listed_count }}</b></div>
-              <div class="quality-row"><span>DNS 泄漏</span><b :style="{ color: currentReport.dns_leak?.dns_leak_suspected ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.dns_leak?.dns_leak_suspected ? '疑似' : '未发现' }}</b></div>
+              <div class="quality-row"><span>{{ $t('单 IP 命中') }}</span><b :style="{ color: currentReport.rbl.listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.listed_count }}</b></div>
+              <div class="quality-row"><span>{{ $t('上游网段命中') }}</span><b :style="{ color: currentReport.rbl.network_listed_count > 0 ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.rbl.network_listed_count }}</b></div>
+              <div class="quality-row"><span>{{ $t('DNS 泄漏') }}</span><b :style="{ color: currentReport.dns_leak?.dns_leak_suspected ? '#F56C6C' : '#3EAF7C' }">{{ currentReport.dns_leak?.dns_leak_suspected ? '疑似' : '未发现' }}</b></div>
             </div>
           </section>
         </div>
@@ -411,11 +412,11 @@ onMounted(() => {
 
     <!-- 空状态 -->
     <div v-else-if="!loading" class="empty-state">
-      <p>输入 IP 后点击「开始检测」，结果会按综合质量分排序展示。</p>
+      <p>{{ $t('输入 IP 后点击「开始检测」，结果会按综合质量分排序展示。') }}</p>
     </div>
 
     <blockquote>
-      综合质量分 = 纯净度 85% + 网络稳定 10% + 数据质量 5%，由多源公开数据交叉验证得出，仅供参考，不代表目标平台的实际放行结果。
+      {{ $t('综合质量分 = 纯净度 85% + 网络稳定 10% + 数据质量 5%，由多源公开数据交叉验证得出，仅供参考，不代表目标平台的实际放行结果。') }}
     </blockquote>
   </div>
 </template>

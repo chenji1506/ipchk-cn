@@ -21,6 +21,7 @@ export default defineNuxtConfig({
     '@nuxtjs/sitemap',
     '@nuxtjs/robots',
     '@vueuse/nuxt',
+    "@nuxtjs/i18n",
     "nuxt-security",
   ],
   vite: {
@@ -37,6 +38,15 @@ export default defineNuxtConfig({
   site: { 
   url: config.siteUrl, 
   name: 'ipchk.cn' 
+  },
+  i18n: {
+    locales: [
+      { code: 'zh', name: '中文', language: 'zh-CN', file: 'zh.json' },
+      { code: 'en', name: 'English', language: 'en-US', file: 'en.json' },
+    ],
+    defaultLocale: 'zh',
+    langDir: 'locales',
+    strategy: 'prefix_except_default',
   },
   css: [
     // 1. 引入 Element Plus 基础样式 (如果你还没有引入的话)

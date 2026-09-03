@@ -1,10 +1,11 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { ref, onMounted } from 'vue';
 
 useHead({
   title: '邮件黑名单检测 | DNSBL 查询 | ipchk.cn',
   meta: [
-    { name: 'description', content: '检测 IP 是否命中邮件黑名单（DNSBL），覆盖 Spamhaus、SpamCop、SORBS、Barracuda 等 16 个权威黑名单源。' },
+    { name: 'description', content: t('检测 IP 是否命中邮件黑名单（DNSBL），覆盖 Spamhaus、SpamCop、SORBS、Barracuda 等 16 个权威黑名单源。') },
     { name: 'keywords', content: '邮件黑名单,DNSBL,spamhaus,spamcop,sorbs,rbl检测,IP黑名单' },
   ],
 });
@@ -50,7 +51,7 @@ async function fillCurrentExit() {
 async function query() {
   const ip = ipAddress.value.trim();
   if (!ip) {
-    error.value = '请输入 IP 地址';
+    error.value = t('请输入 IP 地址');
     return;
   }
   loading.value = true;
@@ -59,7 +60,7 @@ async function query() {
     const data = await $fetch<RBLResult>(apiBase + 'v1/rbl/' + encodeURIComponent(ip));
     result.value = data;
   } catch (e: any) {
-    error.value = e?.message || '查询失败，请稍后重试';
+    error.value = e?.message || t('查询失败，请稍后重试');
     result.value = null;
   } finally {
     loading.value = false;
@@ -67,11 +68,11 @@ async function query() {
 }
 
 function statusText(z: RBLZone): string {
-  if (z.whitelist) return '白名单';
+  if (z.whitelist) return t('白名单');
   switch (z.status) {
-    case 'listed': return '已命中';
-    case 'failed': return '查询失败';
-    default: return '未命中';
+    case 'listed': return t('已命中');
+    case 'failed': return t('查询失败');
+    default: return t('未命中');
   }
 }
 function statusTone(z: RBLZone): string {
@@ -107,8 +108,8 @@ onMounted(() => {
 <template>
   <div class="title">
     <header>
-      <h1>邮件黑名单检测</h1>
-      <p>检测 IP 是否命中 DNSBL 邮件黑名单，覆盖 Spamhaus、SpamCop、SORBS、Barracuda 等 16 个权威源</p>
+      <h1>{{ $t('邮件黑名单检测') }}</h1>
+      <p>{{ $t('检测 IP 是否命中 DNSBL 邮件黑名单，覆盖 Spamhaus、SpamCop、SORBS、Barracuda 等 16 个权威源') }}</p>
     </header>
   </div>
 
@@ -117,14 +118,14 @@ onMounted(() => {
       <div class="one-line">
         <el-input
           v-model="ipAddress"
-          placeholder="请输入 IP 地址（留空查询自己的出口 IP）"
+          :placeholder="$t('请输入 IP 地址（留空查询自己的出口 IP）')"
           clearable
           @keyup.enter="query"
         />
         <el-button type="primary" :loading="loading" @click="query">
-          查询
+          {{ $t('查询') }}
         </el-button>
-        <el-button text @click="fillCurrentExit">填入当前出口 IP</el-button>
+        <el-button text @click="fillCurrentExit">{{ $t('填入当前出口 IP') }}</el-button>
       </div>
       <div v-if="currentExitIp" class="exit-hint">当前出口：{{ currentExitIp }}</div>
     </div>
@@ -136,34 +137,34 @@ onMounted(() => {
       <!-- 汇总卡片 -->
       <div class="summary-cards">
         <div class="sum-card">
-          <span>检查源数</span>
+          <span>{{ $t('检查源数') }}</span>
           <b>{{ result.checked_count ?? 0 }}</b>
         </div>
         <div class="sum-card" :class="(result.listed_count || 0) > 0 ? 'risk' : 'ok'">
-          <span>单 IP 命中</span>
+          <span>{{ $t('单 IP 命中') }}</span>
           <b :style="{ color: (result.listed_count || 0) > 0 ? '#F56C6C' : '#3EAF7C' }">{{ result.listed_count ?? 0 }}</b>
         </div>
         <div class="sum-card" :class="(result.network_listed_count || 0) > 0 ? 'risk' : 'ok'">
-          <span>网段命中</span>
+          <span>{{ $t('网段命中') }}</span>
           <b :style="{ color: (result.network_listed_count || 0) > 0 ? '#F56C6C' : '#3EAF7C' }">{{ result.network_listed_count ?? 0 }}</b>
         </div>
         <div class="sum-card">
-          <span>白名单</span>
+          <span>{{ $t('白名单') }}</span>
           <b :style="{ color: result.white_listed ? '#3EAF7C' : '#909399' }">{{ result.white_listed ? '是' : '否' }}</b>
         </div>
         <div class="sum-card">
-          <span>风险等级</span>
+          <span>{{ $t('风险等级') }}</span>
           <b :style="{ color: (result.listed_count || 0) > 0 ? '#F56C6C' : '#3EAF7C' }">{{ riskLabel(result.risk_level) }}</b>
         </div>
       </div>
 
       <div v-if="result.query_limited" class="warn-tip">
-        ⚠️ 部分 DNSBL 查询受限（上游 DNS 被拦截），结果可能不完整。
+        {{ $t('⚠️ 部分 DNSBL 查询受限（上游 DNS 被拦截），结果可能不完整。') }}
       </div>
 
       <!-- 命中的黑名单 -->
       <div v-if="(result.listed_zones?.length || 0) > 0" class="hit-list">
-        <h4>命中的黑名单源</h4>
+        <h4>{{ $t('命中的黑名单源') }}</h4>
         <div class="hit-tags">
           <span v-for="z in result.listed_zones" :key="z" class="hit-tag">{{ z }}</span>
         </div>
@@ -171,13 +172,13 @@ onMounted(() => {
 
       <!-- 各源状态表 -->
       <div class="zone-table-wrap">
-        <h4>各黑名单源状态</h4>
+        <h4>{{ $t('各黑名单源状态') }}</h4>
         <table class="zone-table">
           <thead>
             <tr>
-              <th>DNSBL 源</th>
-              <th style="width: 90px;">类型</th>
-              <th style="width: 110px;">状态</th>
+              <th>{{ $t('DNSBL 源') }}</th>
+              <th style="width: 90px;">{{ $t('类型') }}</th>
+              <th style="width: 110px;">{{ $t('状态') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -196,11 +197,11 @@ onMounted(() => {
     </div>
 
     <div v-else-if="!loading" class="empty-state">
-      <p>输入 IP 后点击「查询」，查看该 IP 在 16 个 DNSBL 黑名单源的命中情况。</p>
+      <p>{{ $t('输入 IP 后点击「查询」，查看该 IP 在 16 个 DNSBL 黑名单源的命中情况。') }}</p>
     </div>
 
     <blockquote>
-      邮件黑名单（DNSBL）反映 IP 的邮件发送与滥用历史。单 IP 命中与上游网段命中会分开统计；结果仅供参考。
+      {{ $t('邮件黑名单（DNSBL）反映 IP 的邮件发送与滥用历史。单 IP 命中与上游网段命中会分开统计；结果仅供参考。') }}
     </blockquote>
   </div>
 </template>

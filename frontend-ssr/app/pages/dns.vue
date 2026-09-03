@@ -2,18 +2,19 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { isIPv6 } from 'is-ip';
 import { renderMarkdown } from "../../utils/markdown";
 import { formatTime } from '../../utils/tools';
 const route = useRoute()
 
 useHead({
-  title: 'DNS查询工具 | 多节点域名解析检测 | ipchk.cn',
+  title: () => `${t('DNS查询')} | ipchk.cn`,
   meta: [
-    { name: 'description', content: '专业的多节点DNS查询工具,支持A记录、AAAA记录、CNAME记录、MX记录、NS记录、TXT记录、SRV记录、CAA记录等多种DNS解析记录查询,提供全国多节点并发检测,快速返回DNS解析结果,助力域名解析问题排查与优化' },
-    { name: 'keywords', content: 'dns查询,dns解析,域名解析,a记录查询,aaaa记录,cname记录,mx记录,ns记录,txt记录,srv记录,dns服务器,域名dns检测' },
-    { property: 'og:title', content: 'DNS查询工具 - 多节点域名解析记录检测' },
-    { property: 'og:description', content: '多节点DNS查询工具,支持多种DNS记录类型查询,快速检测域名解析状态' },
+    { name: 'description', content: () => t('专业的多节点DNS查询工具,支持A记录、AAAA记录、CNAME记录、MX记录、NS记录、TXT记录、SRV记录、CAA记录等多种DNS解析记录查询,提供全国多节点并发检测,快速返回DNS解析结果,助力域名解析问题排查与优化') },
+    { name: 'keywords', content: () => t('dns查询,dns解析,域名解析,a记录查询,aaaa记录,cname记录,mx记录,ns记录,txt记录,srv记录,dns服务器,域名dns检测') },
+    { property: 'og:title', content: () => t('DNS查询工具 - 多节点域名解析记录检测') },
+    { property: 'og:description', content: () => t('多节点DNS查询工具,支持多种DNS记录类型查询,快速检测域名解析状态') },
     { property: 'og:image', content: config.siteUrl + 'favicon.svg' },
     { property: 'og:type', content: 'website' },
   ],
@@ -23,8 +24,8 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
-        name: 'DNS查询与解析检测工具',
-        description: '专业的多节点DNS查询工具，支持A、AAAA、CNAME、MX、NS、TXT、SRV、CAA等多种记录类型，全国多节点并发检测。',
+        name: t('DNS查询与解析检测工具'),
+        description: t('专业的多节点DNS查询工具，支持A、AAAA、CNAME、MX、NS、TXT、SRV、CAA等多种记录类型，全国多节点并发检测。'),
         url: config.siteUrl + 'dns',
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Web',
@@ -61,7 +62,7 @@ async function getUserIP(){
 }
 
 const recordTypes = [
-  { value: 'all', label: '全量记录' },
+  { value: 'all', label: t('全量记录') },
   { value: 'a', label: 'A 记录' },
   { value: 'aaaa', label: 'AAAA 记录' },
   { value: 'cname', label: 'CNAME 记录' },
@@ -159,15 +160,15 @@ const doc = page.value;
 <template>
   <div class="title">
     <header>
-      <h1>DNS查询</h1>
-      <p>多节点 DNS 查询，检测域名解析记录</p>
+      <h1>{{ $t('DNS查询') }}</h1>
+      <p>{{ $t('多节点 DNS 查询，检测域名解析记录') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：ipchk.cn）" 
+        :placeholder="$t('请输入域名（如：ipchk.cn）')" 
       />
       <el-select v-model="recordType" style="width: 150px;" class="custom-height-select">
         <el-option 
@@ -183,7 +184,7 @@ const doc = page.value;
         type="primary" 
         :loading="isloading"
       >
-        查询
+        {{ $t('查询') }}
       </el-button>
     </div>
         <div class="result-section">
@@ -191,11 +192,11 @@ const doc = page.value;
         <thead>
           <tr>
             
-            <th class="table-header">服务器</th>
-            <th class="table-header">类型</th>
-            <th class="table-header">记录</th>
-            <th class="table-header">记录数</th>
-            <th class="table-header">耗时</th>
+            <th class="table-header">{{ $t('服务器') }}</th>
+            <th class="table-header">{{ $t('类型') }}</th>
+            <th class="table-header">{{ $t('记录') }}</th>
+            <th class="table-header">{{ $t('记录数') }}</th>
+            <th class="table-header">{{ $t('耗时') }}</th>
             <th class="table-header">TTL (S)</th>
             
           </tr>
@@ -204,7 +205,7 @@ const doc = page.value;
           <tr v-for="(result) in results" :key="result.server">
             <td class="table-label">{{result.server}}</td>
             <td class="table-value">{{nowRecordType.toUpperCase() || '--'}}</td>
-            <td class="table-value" v-if="result.loading" colspan="4" style="text-align: left;">加载中...</td>
+            <td class="table-value" v-if="result.loading" colspan="4" style="text-align: left;">{{ $t('加载中...') }}</td>
             <td class="table-value" v-if="!result.loading">
               <template v-if="result && result.data?.record">
                 <div v-for="(ip, index) in result.data.record.slice(0, 5)" :key="index" class="ip-address">
@@ -213,7 +214,7 @@ const doc = page.value;
               </template>
               
               <span v-else-if="!result.loading && result.data?.record?.length === 0" class="status-code" style="color: #F56C6C; background: #fef0f0;">
-                解析失败
+                {{ $t('解析失败') }}
               </span>
             </td>
             
@@ -241,16 +242,16 @@ const doc = page.value;
                 </tr>
               </tbody>
             </table>
-            <div v-else-if="result.loading" class="all-loading">加载中...</div>
+            <div v-else-if="result.loading" class="all-loading">{{ $t('加载中...') }}</div>
           </div>
         </div>
     </div>
     <blockquote>
       <div class="visitor-ip">
-        <span class="vip-label">访客IP</span>
+        <span class="vip-label">{{ $t('访客IP') }}</span>
         <span class="vip-addr">{{ userIP }}</span>
         <span class="vip-net" :class="isIPv6(userIP) ? 'net-v6' : 'net-v4'">
-          {{ isIPv6(userIP) ? 'IPv6 访问优先' : 'IPv4 访问优先' }}
+          {{ isIPv6(userIP) ? $t('IPv6 访问优先') : $t('IPv4 访问优先') }}
         </span>
       </div>
     </blockquote>

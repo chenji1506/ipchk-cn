@@ -2,21 +2,22 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { isIPv6 } from 'is-ip'
 
 const route = useRoute()
 
 useHead({
-  title: 'Whois查询 | ' + (route.query.site || 'ipchk.cn'),
+  title: () => `${t('Whois 查询')} | ${route.query.site || 'ipchk.cn'}`,
   titleTemplate: '%s',
   link: [
     { rel: 'canonical', href: computed(() => new URL(route.path, config.siteUrl).toString()).value }
   ],
   meta: [
-    { name: 'description', content: '专业的Whois域名查询工具,支持.com、.net等国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间、DNS服务器等详细信息,助力域名管理和交易决策' },
-    { name: 'keywords', content: 'whois查询,域名whois,whois信息查询,域名注册信息,域名到期时间,域名注册商,dns服务器查询,域名whois工具' },
-    { property: 'og:title', content: 'Whois域名查询工具 - 域名注册信息在线查询' },
-    { property: 'og:description', content: '专业的Whois域名查询工具,支持国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间等详细信息' },
+    { name: 'description', content: () => t('专业的Whois域名查询工具,支持.com、.net等国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间、DNS服务器等详细信息,助力域名管理和交易决策') },
+    { name: 'keywords', content: () => t('whois查询,域名whois,whois信息查询,域名注册信息,域名到期时间,域名注册商,dns服务器查询,域名whois工具') },
+    { property: 'og:title', content: () => t('Whois域名查询工具 - 域名注册信息在线查询') },
+    { property: 'og:description', content: () => t('专业的Whois域名查询工具,支持国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间等详细信息') },
     { property: 'og:image', content: `${config.siteUrl}favicon.svg` },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: computed(() => new URL(route.path, config.siteUrl).toString()).value },
@@ -28,8 +29,8 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
-        name: 'Whois域名查询工具',
-        description: '专业的Whois域名查询工具,支持国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间、DNS服务器等详细信息',
+        name: t('Whois域名查询工具'),
+        description: t('专业的Whois域名查询工具,支持国内外域名WHOIS信息查询,提供域名注册商、注册时间、到期时间、DNS服务器等详细信息'),
         url: config.siteUrl + 'whois',
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Any',
@@ -38,17 +39,17 @@ useHead({
           price: '0',
           priceCurrency: 'CNY'
         },
-        featureList: 'Whois查询,域名注册信息,域名到期时间,域名注册商查询,DNS服务器查询',
+        featureList: t('Whois查询,域名注册信息,域名到期时间,域名注册商查询,DNS服务器查询'),
         about: [
           {
             '@type': 'Thing',
-            name: 'Whois查询',
-            description: '通过Whois协议查询域名的注册信息,包括注册商、注册时间、到期时间、DNS服务器等技术服务。'
+            name: t('Whois查询'),
+            description: t('通过Whois协议查询域名的注册信息,包括注册商、注册时间、到期时间、DNS服务器等技术服务。')
           },
           {
             '@type': 'Thing',
-            name: '域名管理',
-            description: '通过Whois查询结果,域名持有者可以了解域名到期时间,及时续费避免域名被释放或高价赎回。'
+            name: t('域名管理'),
+            description: t('通过Whois查询结果,域名持有者可以了解域名到期时间,及时续费避免域名被释放或高价赎回。')
           }
         ]
       })
@@ -85,12 +86,12 @@ watch(whoisError, async (newError) => {
     console.log(newError)
     if (currentApiIndex.value < apiList.length - 1) {
       const nextIndex = currentApiIndex.value + 1
-      error.value = `${(newError as any).message || '请求失败'}，正在重试 ${apiList[nextIndex]?.label || ''}...`
+      error.value = `${(newError as any).message || t('请求失败')}${t('，正在重试 ')}${apiList[nextIndex]?.label || ''}...`
       currentApiIndex.value = nextIndex
       await nextTick()
       executeWhois()
     } else {
-      error.value = '请求失败，请检查域名或网络'
+      error.value = t('请求失败，请检查域名或网络')
       loading.value = false
     }
   }
@@ -103,7 +104,7 @@ async function queryWhois() {
   result.value = null
   domain.value = tmpdomain.value.trim()
   if (!domain.value) {
-    error.value = '请输入域名'
+    error.value = t('请输入域名')
     loading.value = false
     return
   }
@@ -157,22 +158,22 @@ function getStatusClass(status: string): string {
 <template>
   <div class="title">
     <header>
-      <h1>Whois 查询</h1>
-      <p>查询域名/IP 注册信息（域名走 Whois 协议，IP 走 RDAP）</p>
+      <h1>{{ $t('Whois 查询') }}</h1>
+      <p>{{ $t('查询域名/IP 注册信息（域名走 Whois 协议，IP 走 RDAP）') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
       <el-input
         v-model="tmpdomain"
-        placeholder="请输入域名（如：example.com）"
+        :placeholder="$t('请输入域名（如：example.com）')"
       />
       <el-button
         @click="queryWhois()"
         type="primary"
         :loading="loading"
       >
-        查询
+        {{ $t('查询') }}
       </el-button>
     </div>
 
@@ -184,17 +185,17 @@ function getStatusClass(status: string): string {
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">项目</th>
-            <th class="table-header">信息</th>
+            <th class="table-header">{{ $t('项目') }}</th>
+            <th class="table-header">{{ $t('信息') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="table-label">域名</td>
+            <td class="table-label">{{ $t('域名') }}</td>
             <td class="table-value">{{ result.domain || result.target }}</td>
           </tr>
           <tr v-if="result.status?.length || typeof result.status === 'string'">
-            <td class="table-label">域名状态</td>
+            <td class="table-label">{{ $t('域名状态') }}</td>
             <td class="table-value">
               <template v-if="Array.isArray(result.status)">
                 <span v-for="(s, i) in result.status" :key="i" :class="getStatusClass(s)" class="status-code" style="margin-right: 4px;">
@@ -205,7 +206,7 @@ function getStatusClass(status: string): string {
             </td>
           </tr>
           <tr v-if="result.registrar?.name || typeof result.registrar === 'string'">
-            <td class="table-label">注册商</td>
+            <td class="table-label">{{ $t('注册商') }}</td>
             <td class="table-value">
               <template v-if="result.registrar?.name">
                 {{ result.registrar.name }}
@@ -215,18 +216,18 @@ function getStatusClass(status: string): string {
             </td>
           </tr>
           <tr v-if="result.registrant && Object.keys(result.registrant).length">
-            <td class="table-label">注册人</td>
+            <td class="table-label">{{ $t('注册人') }}</td>
             <td class="table-value">
               <div v-if="result.registrant.name">{{ result.registrant.name }}</div>
               <div v-if="result.registrant.org">{{ result.registrant.org }}</div>
               <div v-if="result.registrant.phone">{{ result.registrant.phone }}</div>
               <div v-if="result.registrant.email">{{ result.registrant.email }}</div>
               <div v-if="result.registrant.province">{{ result.registrant.province }}</div>
-              <a v-if="result.registrant.contactUri" :href="result.registrant.contactUri" target="_blank" rel="noreferrer">查看注册信息</a>
+              <a v-if="result.registrant.contactUri" :href="result.registrant.contactUri" target="_blank" rel="noreferrer">{{ $t('查看注册信息') }}</a>
             </td>
           </tr>
           <tr v-if="result.technical && Object.keys(result.technical).length">
-            <td class="table-label">技术联系人</td>
+            <td class="table-label">{{ $t('技术联系人') }}</td>
             <td class="table-value">
               <div v-if="result.technical.name">{{ result.technical.name }}</div>
               <div v-if="result.technical.org">{{ result.technical.org }}</div>
@@ -235,7 +236,7 @@ function getStatusClass(status: string): string {
             </td>
           </tr>
           <tr v-if="result.abuseContact && Object.keys(result.abuseContact).length">
-            <td class="table-label">abuse 联系人</td>
+            <td class="table-label">{{ $t('abuse 联系人') }}</td>
             <td class="table-value">
               <div v-if="result.abuseContact.name">{{ result.abuseContact.name }}</div>
               <div v-if="result.abuseContact.phone">{{ result.abuseContact.phone }}</div>
@@ -243,25 +244,25 @@ function getStatusClass(status: string): string {
             </td>
           </tr>
           <tr v-if="result.dates?.registration">
-            <td class="table-label">注册时间</td>
+            <td class="table-label">{{ $t('注册时间') }}</td>
             <td class="table-value">{{ formatDate(result.dates.registration) }}</td>
           </tr>
           <tr v-if="result.dates?.expiration">
-            <td class="table-label">到期时间</td>
+            <td class="table-label">{{ $t('到期时间') }}</td>
             <td class="table-value">{{ formatDate(result.dates.expiration) }}</td>
           </tr>
           <tr v-if="result.dates?.lastChanged">
-            <td class="table-label">最后修改</td>
+            <td class="table-label">{{ $t('最后修改') }}</td>
             <td class="table-value">{{ formatDate(result.dates.lastChanged) }}</td>
           </tr>
           <tr v-if="result.nameservers?.length">
-            <td class="table-label">DNS 服务器</td>
+            <td class="table-label">{{ $t('DNS 服务器') }}</td>
             <td class="table-value">
               <div v-for="ns in result.nameservers" :key="ns">{{ ns }}</div>
             </td>
           </tr>
           <tr v-if="result.whoisServer">
-            <td class="table-label">Whois 服务器</td>
+            <td class="table-label">{{ $t('Whois 服务器') }}</td>
             <td class="table-value">{{ result.whoisServer }}</td>
           </tr>
         </tbody>
@@ -269,10 +270,10 @@ function getStatusClass(status: string): string {
     </div>
 
     <blockquote>
-      数据来源：后端 WHOIS 服务，通过 IANA 注册局 bootstrap 文件自动匹配对应 WHOIS 服务器。<br/>
-      部分注册局对注册人信息做了隐私保护，将显示为 "Redacted for Privacy"。<br/>
-      如需查看完整注册信息，可点击 "查看注册信息" 链接跳转到注册局官网查询。<br/>
-      访客IP: {{ userIP || '获取中...' }} 您的网络{{ isIPv6(userIP) ? 'IPv6' : 'IPv4' }}优先<br/>
+      {{ $t('数据来源：后端 WHOIS 服务，通过 IANA 注册局 bootstrap 文件自动匹配对应 WHOIS 服务器。') }}<br/>
+      {{ $t('部分注册局对注册人信息做了隐私保护，将显示为 "Redacted for Privacy"。') }}<br/>
+      {{ $t('如需查看完整注册信息，可点击 "查看注册信息" 链接跳转到注册局官网查询。') }}<br/>
+      {{ $t('访客IP:') }} {{ userIP || $t('获取中...') }} {{ isIPv6(userIP) ? $t('您的网络 IPv6 优先') : $t('您的网络 IPv4 优先') }}<br/>
     </blockquote>
 
     <div v-if="doc" class="markdown">

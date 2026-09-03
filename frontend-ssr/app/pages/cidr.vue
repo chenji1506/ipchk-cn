@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { t } = useI18n()
 import { ref, computed } from 'vue';
 
 useHead({
@@ -143,10 +144,10 @@ function calcIPv6(ip: string, prefix: number) {
 function calculate() {
   error.value = '';
   const parts = cidrInput.value.trim().split('/');
-  if (parts.length !== 2) { error.value = '格式应为 CIDR，如 192.168.1.0/24 或 2001:db8::/32'; return; }
+  if (parts.length !== 2) { error.value = t('格式应为 CIDR，如 192.168.1.0/24 或 2001:db8::/32'); return; }
   const ip = parts[0].trim();
   const prefix = parseInt(parts[1]);
-  if (isNaN(prefix)) { error.value = '前缀长度不正确'; return; }
+  if (isNaN(prefix)) { error.value = t('前缀长度不正确'); return; }
 
   if (ip.includes(':')) {
     if (prefix < 0 || prefix > 128) { error.value = 'IPv6 前缀长度应为 0-128'; return; }
@@ -162,14 +163,14 @@ function calculate() {
 <template>
   <div class="title">
     <header>
-      <h1>子网计算器</h1>
-      <p>IPv4 / IPv6 CIDR 网段计算（自动识别）</p>
+      <h1>{{ $t('子网计算器') }}</h1>
+      <p>{{ $t('IPv4 / IPv6 CIDR 网段计算（自动识别）') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-input v-model="cidrInput" placeholder="如：192.168.1.0/24 或 2001:db8::/32" clearable @keyup.enter="calculate" />
-      <el-button type="primary" @click="calculate">计算</el-button>
+      <el-input v-model="cidrInput" :placeholder="$t('如：192.168.1.0/24 或 2001:db8::/32')" clearable @keyup.enter="calculate" />
+      <el-button type="primary" @click="calculate">{{ $t('计算') }}</el-button>
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
@@ -178,15 +179,15 @@ function calculate() {
       <table class="result-table">
         <tbody>
           <tr><td class="table-label">CIDR</td><td class="table-value"><span class="ip-highlight">{{ result.cidr }}</span></td></tr>
-          <tr><td class="table-label">网络地址</td><td class="table-value"><span class="mono">{{ result.network }}</span></td></tr>
-          <tr><td class="table-label">广播地址</td><td class="table-value"><span class="mono">{{ result.broadcast }}</span></td></tr>
-          <tr><td class="table-label">子网掩码</td><td class="table-value"><span class="mono">{{ result.mask }}</span></td></tr>
-          <tr><td class="table-label">掩码（二进制）</td><td class="table-value"><span class="mono bin">{{ result.maskBinary }}</span></td></tr>
-          <tr><td class="table-label">网络地址（二进制）</td><td class="table-value"><span class="mono bin">{{ result.networkBinary }}</span></td></tr>
-          <tr><td class="table-label">IP 总数</td><td class="table-value"><b>{{ result.totalIPs.toLocaleString() }}</b> 个</td></tr>
-          <tr><td class="table-label">可用主机</td><td class="table-value"><b>{{ result.hosts.toLocaleString() }}</b> 个</td></tr>
-          <tr><td class="table-label">主机范围</td><td class="table-value"><span class="mono">{{ result.firstHost }} ~ {{ result.lastHost }}</span></td></tr>
-          <tr><td class="table-label">通配掩码</td><td class="table-value"><span class="mono">{{ result.wildcard }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('网络地址') }}</td><td class="table-value"><span class="mono">{{ result.network }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('广播地址') }}</td><td class="table-value"><span class="mono">{{ result.broadcast }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('子网掩码') }}</td><td class="table-value"><span class="mono">{{ result.mask }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('掩码（二进制）') }}</td><td class="table-value"><span class="mono bin">{{ result.maskBinary }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('网络地址（二进制）') }}</td><td class="table-value"><span class="mono bin">{{ result.networkBinary }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('IP 总数') }}</td><td class="table-value"><b>{{ result.totalIPs.toLocaleString() }}</b> 个</td></tr>
+          <tr><td class="table-label">{{ $t('可用主机') }}</td><td class="table-value"><b>{{ result.hosts.toLocaleString() }}</b> 个</td></tr>
+          <tr><td class="table-label">{{ $t('主机范围') }}</td><td class="table-value"><span class="mono">{{ result.firstHost }} ~ {{ result.lastHost }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('通配掩码') }}</td><td class="table-value"><span class="mono">{{ result.wildcard }}</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -195,15 +196,15 @@ function calculate() {
       <table class="result-table">
         <tbody>
           <tr><td class="table-label">CIDR</td><td class="table-value"><span class="ip-highlight">{{ result.cidr }}</span></td></tr>
-          <tr><td class="table-label">网络地址（压缩）</td><td class="table-value"><span class="mono">{{ result.network }}</span></td></tr>
-          <tr><td class="table-label">网络地址（完整）</td><td class="table-value"><span class="mono v6full">{{ result.networkFull }}</span></td></tr>
-          <tr><td class="table-label">子网末地址</td><td class="table-value"><span class="mono">{{ result.last }}</span></td></tr>
-          <tr><td class="table-label">前缀长度</td><td class="table-value"><b>/{{ result.prefix }}</b></td></tr>
-          <tr><td class="table-label">掩码（十六进制）</td><td class="table-value"><span class="mono v6full">{{ result.maskHex }}</span></td></tr>
-          <tr><td class="table-label">地址总数</td><td class="table-value"><b>{{ result.totalDisplay }}</b> 个</td></tr>
+          <tr><td class="table-label">{{ $t('网络地址（压缩）') }}</td><td class="table-value"><span class="mono">{{ result.network }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('网络地址（完整）') }}</td><td class="table-value"><span class="mono v6full">{{ result.networkFull }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('子网末地址') }}</td><td class="table-value"><span class="mono">{{ result.last }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('前缀长度') }}</td><td class="table-value"><b>/{{ result.prefix }}</b></td></tr>
+          <tr><td class="table-label">{{ $t('掩码（十六进制）') }}</td><td class="table-value"><span class="mono v6full">{{ result.maskHex }}</span></td></tr>
+          <tr><td class="table-label">{{ $t('地址总数') }}</td><td class="table-value"><b>{{ result.totalDisplay }}</b> 个</td></tr>
         </tbody>
       </table>
-      <blockquote>IPv6 使用前缀长度表示网段（无点分掩码），掩码以十六进制分组显示。</blockquote>
+      <blockquote>{{ $t('IPv6 使用前缀长度表示网段（无点分掩码），掩码以十六进制分组显示。') }}</blockquote>
     </div>
   </div>
 </template>

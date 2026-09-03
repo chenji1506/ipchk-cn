@@ -2,17 +2,18 @@
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { extractHost } from '../../utils/tools';
 
 const route = useRoute()
 
 useHead({
-  title: 'TCPing测试工具 | IPv4服务器连通性检测 | ipchk.cn',
+  title: () => `${t('IPv4 TCPing 测试')} | ipchk.cn`,
   meta: [
-    { name: 'description', content: '专业的IPv4 TCPing测试工具,提供多节点TCP连通性检测服务,支持自定义端口测试,实时检测服务器丢包率、平均延迟、最大最小响应时间,帮助运维人员快速诊断服务器网络质量,确保服务稳定运行' },
-    { name: 'keywords', content: 'tcping测试,tcp连通性检测,ipv4 tcping,服务器延迟测试,丢包率检测,端口连通性,服务器网络测试,网络质量检测' },
-    { property: 'og:title', content: 'TCPing测试工具 - IPv4服务器连通性与延迟检测' },
-    { property: 'og:description', content: '多节点TCPing测试,检测服务器连通性、丢包率与响应延迟' },
+    { name: 'description', content: () => t('专业的IPv4 TCPing测试工具,提供多节点TCP连通性检测服务,支持自定义端口测试,实时检测服务器丢包率、平均延迟、最大最小响应时间,帮助运维人员快速诊断服务器网络质量,确保服务稳定运行') },
+    { name: 'keywords', content: () => t('tcping测试,tcp连通性检测,ipv4 tcping,服务器延迟测试,丢包率检测,端口连通性,服务器网络测试,网络质量检测') },
+    { property: 'og:title', content: () => t('TCPing测试工具 - IPv4服务器连通性与延迟检测') },
+    { property: 'og:description', content: () => t('多节点TCPing测试,检测服务器连通性、丢包率与响应延迟') },
     { property: 'og:image', content: config.siteUrl + 'favicon.svg' },
     { property: 'og:type', content: 'website' },
   ],
@@ -22,8 +23,8 @@ useHead({
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
-        name: 'IPv4 TCPing连通性测试工具',
-        description: '专业的IPv4 TCPing测试工具，多节点检测服务器连通性和延迟，支持自定义端口测试，提供丢包率、平均延迟、最大最小响应时间等数据。',
+        name: t('IPv4 TCPing连通性测试工具'),
+        description: t('专业的IPv4 TCPing测试工具，多节点检测服务器连通性和延迟，支持自定义端口测试，提供丢包率、平均延迟、最大最小响应时间等数据。'),
         url: config.siteUrl + 'tcping',
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Web',
@@ -136,7 +137,7 @@ function TCPingAll() {
       console.error(err);
       const result = serverResults.value[index];
       if (result) {
-        result.error = '请求失败';
+        result.error = t('请求失败');
       }
     } finally {
       const result = serverResults.value[index];
@@ -164,19 +165,19 @@ onMounted(() => {
 <template>
   <div class="title">
     <header>
-      <h1>IPv4 TCPing 测试</h1>
-      <p>多节点 TCPing 测试，检测服务器连通性和延迟</p>
+      <h1>{{ $t('IPv4 TCPing 测试') }}</h1>
+      <p>{{ $t('多节点 TCPing 测试，检测服务器连通性和延迟') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
       <el-input 
         v-model="tmpDomain" 
-        placeholder="请输入域名（如：ipchk.cn）" 
+        :placeholder="$t('请输入域名（如：ipchk.cn）')" 
       />
       <el-input 
         v-model="port" 
-        placeholder="端口号（默认 80）" 
+        :placeholder="$t('端口号（默认 80）')" 
         style="width: 200px;"
       />
       <el-button 
@@ -184,7 +185,7 @@ onMounted(() => {
         type="primary" 
         :loading="loading"
       >
-        开始测试
+        {{ $t('开始测试') }}
       </el-button>
     </div>
 
@@ -192,14 +193,14 @@ onMounted(() => {
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">服务器</th>
-            <th class="table-header">解析 IP</th>
-            <th class="table-header">发送包</th>
-            <th class="table-header">接收包</th>
-            <th class="table-header">丢包率(%)</th>
-            <th class="table-header">最长时间(ms)</th>
-            <th class="table-header">最短时间(ms)</th>
-            <th class="table-header">平均时间(ms)</th>
+            <th class="table-header">{{ $t('服务器') }}</th>
+            <th class="table-header">{{ $t('解析 IP') }}</th>
+            <th class="table-header">{{ $t('发送包') }}</th>
+            <th class="table-header">{{ $t('接收包') }}</th>
+            <th class="table-header">{{ $t('丢包率(%)') }}</th>
+            <th class="table-header">{{ $t('最长时间(ms)') }}</th>
+            <th class="table-header">{{ $t('最短时间(ms)') }}</th>
+            <th class="table-header">{{ $t('平均时间(ms)') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -220,7 +221,7 @@ onMounted(() => {
             </tr>
             <tr v-else-if="server.loading">
               <td class="table-label">{{ server.label }}</td>
-              <td class="table-value" colspan="7">加载中...</td>
+              <td class="table-value" colspan="7">{{ $t('加载中...') }}</td>
             </tr>
             <tr v-else-if="server.error">
               <td class="table-label">{{ server.label }}</td>

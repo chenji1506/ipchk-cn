@@ -2,16 +2,17 @@
 import { computed, ref, onMounted } from 'vue';
 import { isIPv6 } from 'is-ip';
 const config = useIpchkConfig()
+const { t } = useI18n()
 import { CircleCheckFilled, CircleCloseFilled, CopyDocument, Location, Loading, WarningFilled, InfoFilled, Monitor, Connection, Lock, Odometer, Search, List, Grid } from '@element-plus/icons-vue';
 
 // 工具快捷入口
 const tools = [
   { to: '/dns', name: 'DNS解析', desc: 'A / AAAA / MX', icon: Connection, color: 'green' },
-  { to: '/ssl', name: 'SSL检查', desc: '证书有效期', icon: Lock, color: 'blue' },
-  { to: '/tcping', name: 'TCPing', desc: '端口连通性', icon: Odometer, color: 'orange' },
-  { to: '/whois', name: 'Whois查询', desc: '域名注册信息', icon: Search, color: 'purple' },
-  { to: '/batch', name: '批量查询', desc: '多 IP 归属地', icon: List, color: 'red' },
-  { to: '/cidr', name: '子网计算', desc: 'IPv4 / IPv6 网段', icon: Grid, color: 'cyan' },
+  { to: '/ssl', name: 'SSL检查', desc: t('证书有效期'), icon: Lock, color: 'blue' },
+  { to: '/tcping', name: 'TCPing', desc: t('端口连通性'), icon: Odometer, color: 'orange' },
+  { to: '/whois', name: 'Whois查询', desc: t('域名注册信息'), icon: Search, color: 'purple' },
+  { to: '/batch', name: t('批量查询'), desc: t('多 IP 归属地'), icon: List, color: 'red' },
+  { to: '/cidr', name: t('子网计算'), desc: 'IPv4 / IPv6 网段', icon: Grid, color: 'cyan' },
 ];
 
 // 复制 IP
@@ -47,9 +48,9 @@ const netStatusClass = computed(() => {
   return 'loading';
 });
 const netStatusText = computed(() => {
-  if (yourIPv6.value && isIPv6(yourIPv6.value)) return '您的网络 IPv6 优先';
-  if (yourIPv4.value && isIPv4(yourIPv4.value)) return '您的网络 IPv4 优先';
-  return '正在检测您的网络...';
+  if (yourIPv6.value && isIPv6(yourIPv6.value)) return t('您的网络 IPv6 优先');
+  if (yourIPv4.value && isIPv4(yourIPv4.value)) return t('您的网络 IPv4 优先');
+  return t('正在检测您的网络...');
 });
 
 
@@ -233,11 +234,11 @@ onMounted(async () => {
     <div class="hero-glow hero-glow-1"></div>
     <div class="hero-glow hero-glow-2"></div>
     <div class="hero-content">
-      <h1 class="hero-title">IP 查询</h1>
-      <p class="hero-subtitle">致力于 IP 查询去中心化，推进 IPv6 规模部署和应用</p>
+      <h1 class="hero-title">{{ $t('IP 查询') }}</h1>
+      <p class="hero-subtitle">{{ $t('致力于 IP 查询去中心化，推进 IPv6 规模部署和应用') }}</p>
       <div class="hero-badges">
-        <span class="hero-badge"><span class="hero-badge-dot"></span>IPv4 / IPv6 双栈</span>
-        <span class="hero-badge hero-badge-free">免费 · 无需注册</span>
+        <span class="hero-badge"><span class="hero-badge-dot"></span>{{ $t('IPv4 / IPv6 双栈') }}</span>
+        <span class="hero-badge hero-badge-free">{{ $t('免费 · 无需注册') }}</span>
       </div>
     </div>
   </div>
@@ -248,7 +249,7 @@ onMounted(async () => {
       <div class="ip-card">
         <div class="ip-card-header">
           <span class="ip-tag ipv4-tag">IPv4</span>
-          <span class="ip-card-status"><span class="status-dot status-dot-green"></span>本机公网地址</span>
+          <span class="ip-card-status"><span class="status-dot status-dot-green"></span>{{ $t('本机公网地址') }}</span>
           <button v-if="yourIPv4" class="ip-copy-btn" @click="copyText(yourIPv4, 'v4')">
             <el-icon><CopyDocument /></el-icon>{{ copied4 ? '已复制' : '复制' }}
           </button>
@@ -257,17 +258,17 @@ onMounted(async () => {
           <template v-if="yourIPv4">
             <span class="ip-addr">{{ yourIPv4 }}</span>
             <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv4}`" target="_blank">
-              <el-icon><Location /></el-icon>查询归属地
+              <el-icon><Location /></el-icon>{{ $t('查询归属地') }}
             </RouterLink>
           </template>
-          <div v-else class="ip-loading"><el-icon class="is-loading"><Loading /></el-icon>获取中...</div>
+          <div v-else class="ip-loading"><el-icon class="is-loading"><Loading /></el-icon>{{ $t('获取中...') }}</div>
         </div>
       </div>
 
       <div class="ip-card">
         <div class="ip-card-header">
           <span class="ip-tag ipv6-tag">IPv6</span>
-          <span class="ip-card-status"><span class="status-dot status-dot-purple"></span>本机公网地址</span>
+          <span class="ip-card-status"><span class="status-dot status-dot-purple"></span>{{ $t('本机公网地址') }}</span>
           <button v-if="yourIPv6" class="ip-copy-btn" @click="copyText(yourIPv6, 'v6')">
             <el-icon><CopyDocument /></el-icon>{{ copied6 ? '已复制' : '复制' }}
           </button>
@@ -276,12 +277,12 @@ onMounted(async () => {
           <template v-if="yourIPv6">
             <span class="ip-addr ip-addr-v6">{{ yourIPv6 }}</span>
             <RouterLink class="ip-loc-btn" :to="`/location?ip=${yourIPv6}`" target="_blank">
-              <el-icon><Location /></el-icon>查询归属地
+              <el-icon><Location /></el-icon>{{ $t('查询归属地') }}
             </RouterLink>
           </template>
           <template v-else>
-            <div class="ip-loading ip-loading-empty"><el-icon><WarningFilled /></el-icon>未检测到 IPv6 地址</div>
-            <RouterLink class="ip-loc-btn ip-loc-btn-ghost" to="/doc/user/enable_ipv6" target="_blank">如何开启 IPv6</RouterLink>
+            <div class="ip-loading ip-loading-empty"><el-icon><WarningFilled /></el-icon>{{ $t('未检测到 IPv6 地址') }}</div>
+            <RouterLink class="ip-loc-btn ip-loc-btn-ghost" to="/doc/user/enable_ipv6" target="_blank">{{ $t('如何开启 IPv6') }}</RouterLink>
           </template>
         </div>
       </div>
@@ -308,8 +309,8 @@ onMounted(async () => {
     <div class="code-card">
       <div class="code-card-header">
         <div class="code-card-title-wrap">
-          <span class="code-card-title"><el-icon><Monitor /></el-icon>命令行示例</span>
-          <span class="code-card-sub">使用 curl 快速获取本机 IP</span>
+          <span class="code-card-title"><el-icon><Monitor /></el-icon>{{ $t('命令行示例') }}</span>
+          <span class="code-card-sub">{{ $t('使用 curl 快速获取本机 IP') }}</span>
         </div>
         <button class="code-copy-btn" :class="{ 'copied': copied }" @click="copyCode">{{ copied ? '已复制 ✓' : '复制' }}</button>
       </div>
@@ -319,7 +320,7 @@ onMounted(async () => {
 
     <blockquote class="ipv6-tip">
       <el-icon><InfoFilled /></el-icon>
-      <span>手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。</span>
+      <span>{{ $t('手机默认开启 IPv6，宽带开启 IPv6 请咨询运营商或自行搜索相关教程。') }}</span>
     </blockquote>
   </div>
 </template>

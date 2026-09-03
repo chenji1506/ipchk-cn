@@ -2,12 +2,13 @@
 import { ref, computed } from 'vue'
 
 const config = useIpchkConfig()
+const { t } = useI18n()
 
 useHead({
-  title: '网站检测 | ipchk.cn',
+  title: () => `${t('网站检测')} | ipchk.cn`,
   meta: [
-    { name: 'description', content: '检测网站的 HTTPS、安全响应头（HSTS/CSP/X-Frame-Options 等）与 HTTP 版本（HTTP/2/HTTP/3），给出安全评分。' },
-    { name: 'keywords', content: '网站检测,网站安全检测,安全响应头,HTTPS检测,HSTS,CSP,HTTP/2,HTTP/3,security headers' },
+    { name: 'description', content: () => t('检测网站的 HTTPS、安全响应头（HSTS/CSP/X-Frame-Options 等）与 HTTP 版本（HTTP/2/HTTP/3），给出安全评分。') },
+    { name: 'keywords', content: () => t('网站检测,网站安全检测,安全响应头,HTTPS检测,HSTS,CSP,HTTP/2,HTTP/3,security headers') },
   ],
 })
 
@@ -33,7 +34,7 @@ async function querySecurity() {
   httpResult.value = null
   const url = tmpurl.value.trim()
   if (!url) {
-    error.value = '请输入网址'
+    error.value = t('请输入网址')
     loading.value = false
     return
   }
@@ -45,7 +46,7 @@ async function querySecurity() {
     result.value = sec
     httpResult.value = hv
   } catch (e: any) {
-    error.value = e?.message || '请求失败，请重试'
+    error.value = e?.message || t('请求失败，请重试')
   } finally {
     loading.value = false
   }
@@ -55,14 +56,14 @@ async function querySecurity() {
 <template>
   <div class="title">
     <header>
-      <h1>网站检测</h1>
-      <p>检测网站的 HTTPS、安全响应头（HSTS / CSP / X-Frame-Options 等）与 HTTP 版本，给出安全评分</p>
+      <h1>{{ $t('网站检测') }}</h1>
+      <p>{{ $t('检测网站的 HTTPS、安全响应头（HSTS / CSP / X-Frame-Options 等）与 HTTP 版本，给出安全评分') }}</p>
     </header>
   </div>
   <div class="content">
     <div class="one-line">
-      <el-input v-model="tmpurl" placeholder="输入网址（如：example.com）" @keyup.enter="querySecurity()" />
-      <el-button @click="querySecurity()" type="primary" :loading="loading">检测</el-button>
+      <el-input v-model="tmpurl" :placeholder="$t('输入网址（如：example.com）')" @keyup.enter="querySecurity()" />
+      <el-button @click="querySecurity()" type="primary" :loading="loading">{{ $t('检测') }}</el-button>
     </div>
 
     <div v-if="error" class="error-message">{{ error }}</div>
@@ -71,28 +72,28 @@ async function querySecurity() {
       <div class="score-card">
         <div class="grade" :style="gradeStyle">{{ result.grade }}</div>
         <div class="score-detail">
-          <div>评分：<b>{{ result.score }}</b> / {{ result.max_score }}</div>
+          <div>{{ $t('评分：') }}<b>{{ result.score }}</b> / {{ result.max_score }}</div>
           <div>
-            HTTPS：
-            <span :class="result.https ? 'badge-green' : 'badge-red'">{{ result.https ? '已启用' : '未启用' }}</span>
-            <span class="final-url">（{{ result.final_url }}，状态码 {{ result.status_code }}）</span>
+            {{ $t('HTTPS：') }}
+            <span :class="result.https ? 'badge-green' : 'badge-red'">{{ result.https ? $t('已启用') : $t('未启用') }}</span>
+            <span class="final-url">（{{ result.final_url }}，{{ $t('状态码') }} {{ result.status_code }}）</span>
           </div>
         </div>
       </div>
 
       <div v-if="httpResult" class="http-card">
-        <span class="http-label">HTTP 版本</span>
+        <span class="http-label">{{ $t('HTTP 版本') }}</span>
         <span class="proto-tag" :class="httpResult.http2 ? 'proto-ok' : 'proto-no'">HTTP/2{{ httpResult.http2 ? ' ✓' : ' ✗' }}</span>
         <span class="proto-tag" :class="httpResult.http3 ? 'proto-ok' : 'proto-no'">HTTP/3{{ httpResult.http3 ? ' ✓' : ' ✗' }}</span>
-        <span v-if="httpResult.negotiated" class="negotiated">实际协商 <code>{{ httpResult.negotiated }}</code></span>
+        <span v-if="httpResult.negotiated" class="negotiated">{{ $t('实际协商') }} <code>{{ httpResult.negotiated }}</code></span>
       </div>
 
       <table class="result-table">
         <thead>
           <tr>
-            <th class="table-header">检查项</th>
-            <th class="table-header">状态</th>
-            <th class="table-header">值</th>
+            <th class="table-header">{{ $t('检查项') }}</th>
+            <th class="table-header">{{ $t('状态') }}</th>
+            <th class="table-header">{{ $t('值') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -103,7 +104,7 @@ async function querySecurity() {
             </td>
             <td class="table-value">
               <span class="level-tag" :class="'level-' + ch.level">
-                {{ ch.level === 'good' ? '✓ 已设置' : (ch.level === 'warn' ? '⚠ 已弃用' : '✗ 缺失') }}
+                {{ ch.level === 'good' ? $t('✓ 已设置') : (ch.level === 'warn' ? $t('⚠ 已弃用') : $t('✗ 缺失')) }}
               </span>
               <span class="check-score" v-if="ch.max_score > 0">+{{ ch.score }}/{{ ch.max_score }}</span>
             </td>
@@ -117,8 +118,8 @@ async function querySecurity() {
     </div>
 
     <blockquote>
-      评分参考 securityheaders.com 标准，仅反映响应头配置情况，不代表网站整体安全水平。<br/>
-      检测默认先尝试 HTTPS，失败时回退到 HTTP。
+      {{ $t('评分参考 securityheaders.com 标准，仅反映响应头配置情况，不代表网站整体安全水平。') }}<br/>
+      {{ $t('检测默认先尝试 HTTPS，失败时回退到 HTTP。') }}
     </blockquote>
   </div>
 </template>
