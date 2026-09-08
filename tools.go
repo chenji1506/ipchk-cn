@@ -331,13 +331,20 @@ func httpVersionHandler(c *gin.Context) {
 		http2Supported = resp.RawResponse.Proto == "HTTP/2.0"
 	}
 
-	// HTTP/3 检测：查 DNS HTTPS/SVCB 记录（type 65），alpn 含 h3 即支持
+	// HTTP/3 检测：① DNS HTTPS/SVCB 记录（type 65）alpn 含 h3；② 响应头 Alt-Svc
 	alpns := webtest.QueryHTTPSAlpn(host)
 	http3Supported := false
 	for _, a := range alpns {
 		if strings.HasPrefix(a, "h3") {
 			http3Supported = true
 			break
+		}
+	}
+	// 大多数网站通过 Alt-Svc 响应头广告 HTTP/3（而非 DNS HTTPS 记录）
+	if !http3Supported && err == nil {
+		altSvc := resp.RawResponse.Header.Get("Alt-Svc")
+		if strings.Contains(strings.ToLower(altSvc), "h3") {
+			http3Supported = true
 		}
 	}
 

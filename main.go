@@ -64,7 +64,8 @@ func initHTTPClients() {
 				}
 				return dialer.DialContext(ctx, network, addr)
 			},
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+			ForceAttemptHTTP2: true,
 		}
 	}
 	V6Client = resty.New()
