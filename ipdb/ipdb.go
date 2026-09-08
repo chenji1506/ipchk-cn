@@ -60,29 +60,19 @@ func PullDatabase(ghproxy string) error {
 		}
 	}
 
-	slog.Info("Copying downloaded files to working directory...")
+	// 解压 .gz 文件（IP 库保留在 ./tmp 挂载卷，实现持久化，容器重建后无需重复下载）
 	for _, t := range tasks {
-		src := filepath.Join(tmpDir, t.name)
-		if _, err := os.Stat(src); os.IsNotExist(err) {
-			slog.Warn("Skipping missing file", "file", t.name)
-			continue
-		}
-		dst := "./" + t.name
-		if err := copyFile(src, dst); err != nil {
-			slog.Error("Failed to copy file", "file", t.name, "error", err)
-			continue
-		}
 		if strings.HasSuffix(t.name, ".gz") {
+			gzPath := filepath.Join(tmpDir, t.name)
 			outName := strings.TrimSuffix(t.name, ".gz")
+			outPath := filepath.Join(tmpDir, outName)
 			slog.Info("Decompressing...", "file", t.name, "output", outName)
-			if err := gunzipFile(dst, "./"+outName); err != nil {
+			if err := gunzipFile(gzPath, outPath); err != nil {
 				slog.Error("Failed to decompress", "file", t.name, "error", err)
 			}
-			os.Remove(dst)
+			os.Remove(gzPath)
 		}
 	}
-
-	os.RemoveAll(tmpDir)
 
 	if failCount > 0 {
 		slog.Error("Some downloads failed", "failed", failCount)
@@ -121,44 +111,6 @@ func downloadWithRetry(url, name string) error {
 		return nil
 	}
 	return lastErr
-}
-
-func copyFile(src, dst string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-
-	tmp := dst + ".tmp"
-	out, err := os.Create(tmp)
-	if err != nil {
-		return err
-	}
-
-	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
-		os.Remove(tmp)
-		return err
-	}
-
-	if err := out.Sync(); err != nil {
-		out.Close()
-		os.Remove(tmp)
-		return err
-	}
-
-	if err := out.Close(); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-
-	if err := os.Rename(tmp, dst); err != nil {
-		os.Remove(tmp)
-		return err
-	}
-
-	return nil
 }
 
 func gunzipFile(src, dst string) error {

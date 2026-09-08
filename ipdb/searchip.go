@@ -134,12 +134,12 @@ func resolveDivision(code int) (province, city, district string) {
 }
 
 func loadDivisionData() error {
-	newFull, err := loadDivisionCode("full.txt", "\t")
+	newFull, err := loadDivisionCode("./tmp/full.txt", "\t")
 	if err != nil {
 		slog.Error("failed to load full.txt", "error", err)
 		return err
 	}
-	newShort, err := loadDivisionCode("short.txt", "  ")
+	newShort, err := loadDivisionCode("./tmp/short.txt", "  ")
 	if err != nil {
 		slog.Error("failed to load short.txt", "error", err)
 		return err
@@ -163,13 +163,13 @@ func loadIp2Region() error {
 		slog.Info("Previous ip2region closed")
 	}
 
-	v4Config, err := service.NewV4Config(service.VIndexCache, "ip2region_v4.xdb", 20)
+	v4Config, err := service.NewV4Config(service.VIndexCache, "./tmp/ip2region_v4.xdb", 20)
 	if err != nil {
 		slog.Error("failed to create v4 config", "error", err)
 		return err
 	}
 
-	v6Config, err := service.NewV6Config(service.VIndexCache, "ip2region_v6.xdb", 20)
+	v6Config, err := service.NewV6Config(service.VIndexCache, "./tmp/ip2region_v6.xdb", 20)
 	if err != nil {
 		slog.Error("failed to create v6 config", "error", err)
 		return err
@@ -193,7 +193,7 @@ func loadQQWry() error {
 		slog.Info("Previous qqwry.ipdb closed")
 	}
 	var err error
-	qqwryDB, err = ipdbgo.NewCity("qqwry.ipdb")
+	qqwryDB, err = ipdbgo.NewCity("./tmp/qqwry.ipdb")
 	if err != nil {
 		slog.Error("failed to load qqwry.ipdb", "error", err)
 		return err
@@ -204,7 +204,7 @@ func loadQQWry() error {
 
 func reloadQQWry() error {
 	// 1. 先创建新实例
-	newDB, err := ipdbgo.NewCity("qqwry.ipdb")
+	newDB, err := ipdbgo.NewCity("./tmp/qqwry.ipdb")
 	if err != nil {
 		return fmt.Errorf("reload qqwry failed: %w", err)
 	}
@@ -228,10 +228,10 @@ func loadMMDB() error {
 	}
 
 	mmdbFiles := map[string]string{
-		"geolite2_city": "GeoLite2-City.mmdb",
-		"geolite2_asn":  "GeoLite2-ASN.mmdb",
-		"geocn":         "GeoCN.mmdb",
-		"dbip_city":     "dbip-city-lite.mmdb",
+		"geolite2_city": "./tmp/GeoLite2-City.mmdb",
+		"geolite2_asn":  "./tmp/GeoLite2-ASN.mmdb",
+		"geocn":         "./tmp/GeoCN.mmdb",
+		"dbip_city":     "./tmp/dbip-city-lite.mmdb",
 	}
 
 	mmdbDBs = make(map[string]*maxminddb.Reader)
@@ -259,10 +259,10 @@ func reloadMMDB() error {
 	}
 
 	mmdbFiles := map[string]string{
-		"geolite2_city": "GeoLite2-City.mmdb",
-		"geolite2_asn":  "GeoLite2-ASN.mmdb",
-		"geocn":         "GeoCN.mmdb",
-		"dbip_city":     "dbip-city-lite.mmdb",
+		"geolite2_city": "./tmp/GeoLite2-City.mmdb",
+		"geolite2_asn":  "./tmp/GeoLite2-ASN.mmdb",
+		"geocn":         "./tmp/GeoCN.mmdb",
+		"dbip_city":     "./tmp/dbip-city-lite.mmdb",
 	}
 
 	mmdbDBs = make(map[string]*maxminddb.Reader)
