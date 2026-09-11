@@ -353,6 +353,7 @@ onMounted(async () => {
   top: -200px;
   left: 50%;
   transform: translateX(-130%);
+  animation: glow-breathe-1 9s ease-in-out infinite;
 }
 .hero-glow-2 {
   width: 400px;
@@ -361,18 +362,22 @@ onMounted(async () => {
   top: -180px;
   right: 50%;
   transform: translateX(130%);
+  animation: glow-breathe-2 9s ease-in-out infinite;
+  animation-delay: -4.5s;
 }
 html.dark .hero-glow { opacity: 0.16; }
-.hero-content { position: relative; z-index: 1; }
+.hero-content { position: relative; z-index: 1; animation: fade-in-up 0.7s ease-out both; }
 .hero-title {
   font-size: 2.6em;
   font-weight: 800;
   margin: 0 0 10px;
-  background: linear-gradient(135deg, #2E9A68, #3EAF7C 45%, #7C4DFF);
+  background: linear-gradient(135deg, #2E9A68, #3EAF7C 45%, #7C4DFF, #3EAF7C);
+  background-size: 250% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 1px;
+  animation: gradient-flow 7s ease-in-out infinite;
 }
 .hero-subtitle {
   margin: 0 0 18px;
@@ -420,6 +425,7 @@ html.dark .hero-subtitle { color: #9ca3af; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  animation: fade-in-up 0.7s 0.12s ease-out both;
 }
 @media (max-width: 768px) {
   .ip-cards { grid-template-columns: 1fr; }
@@ -509,6 +515,7 @@ html.dark .ip-card:hover {
   font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, Monaco, monospace;
   font-size: 1.6em;
   font-weight: 700;
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   background: linear-gradient(135deg, #3EAF7C, #2E9A68);
   -webkit-background-clip: text;
   background-clip: text;
@@ -597,6 +604,7 @@ html.dark .ip-loading-empty { color: #8a8f98; }
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin: 26px 0 8px;
+  animation: fade-in-up 0.7s 0.24s ease-out both;
 }
 @media (max-width: 900px) {
   .tool-grid { grid-template-columns: repeat(3, 1fr); }
@@ -630,6 +638,10 @@ html.dark .tool-item:hover {
 }
 .tool-icon {
   font-size: 1.7em;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tool-item:hover .tool-icon {
+  transform: scale(1.18) translateY(-2px);
 }
 .tool-icon-green { color: #3EAF7C; }
 .tool-icon-blue { color: #409EFF; }
@@ -655,6 +667,7 @@ html.dark .tool-name { color: #e5e7eb; }
   overflow: hidden;
   border: 1px solid #e8ecf0;
   background: #fff;
+  animation: fade-in-up 0.7s 0.36s ease-out both;
 }
 html.dark .code-card {
   background: rgba(255, 255, 255, 0.04);
@@ -751,6 +764,35 @@ html.dark .ipv6-tip { color: #9ca3af; }
   .ip-addr { font-size: 1.25em; }
   .ip-card-body { flex-direction: column; align-items: flex-start; }
   .code-block { padding: 0.8rem; font-size: 0.8em; }
+}
+
+/* ===== 动画 keyframes ===== */
+@keyframes glow-breathe-1 {
+  0%, 100% { transform: translateX(-130%) scale(1); opacity: 0.28; }
+  50% { transform: translateX(-130%) scale(1.15); opacity: 0.4; }
+}
+@keyframes glow-breathe-2 {
+  0%, 100% { transform: translateX(130%) scale(1); opacity: 0.28; }
+  50% { transform: translateX(130%) scale(1.15); opacity: 0.4; }
+}
+@keyframes gradient-flow {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* 尊重系统「减少动态」设置 */
+@media (prefers-reduced-motion: reduce) {
+  .hero-glow-1, .hero-glow-2, .hero-title, .ip-addr,
+  .hero-content, .ip-cards, .tool-grid, .code-card {
+    animation: none !important;
+  }
 }
 </style>
 <style>
