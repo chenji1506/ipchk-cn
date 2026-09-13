@@ -1492,6 +1492,13 @@ func portScanHandler(c *gin.Context) {
 	if host == "" {
 		host = c.ClientIP()
 	}
+	// SSRF 防护：禁止扫描回环/内网/链路本地（含云元数据 169.254.169.254）地址
+	if ssrf.HasLocalOrPrivateIP(host) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "target is a private/local address, scanning is not allowed",
+		})
+		return
+	}
 	portsStr := c.Query("ports")
 	var ports []int
 	if portsStr != "" {
@@ -2472,6 +2479,14 @@ func pingHandler(c *gin.Context) {
 		return
 	}
 
+	// SSRF 防护：禁止探测回环/内网/链路本地（含云元数据 169.254.169.254）地址
+	if ssrf.HasLocalOrPrivateIP(host) {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "target is a private/local address, probing is not allowed",
+		})
+		return
+	}
+
 	count := 4
 	if countStr := c.Query("count"); countStr != "" {
 		n, err := strconv.Atoi(countStr)
@@ -2615,7 +2630,7 @@ func main() {
 	readConfig()
 	webtest.SetDNSServer(DNS_SERVER)
 	initHTTPClients()
-	initLogStats()
+	// initLogStats() // 随 /v1/logs、/v1/analytics 下线一并停用（恢复路由时取消注释）
 	if IPDB != "false" {
 		ipdb.Init(GH_PROXY)
 	}
@@ -2648,8 +2663,11 @@ func main() {
 	r.GET("/v1/card", ipCardHandler)
 	r.GET("/v1/scan/:ip", portScanHandler)
 	r.GET("/v1/whois/:target", whoisHandler)
-	r.GET("/v1/logs", logsHandler)
-	r.GET("/v1/analytics", analyticsHandler)
+	// 访问统计/实时日志接口已下线：nginx 侧的 Basic Auth 保护已移除，
+	// 路由若继续注册会无认证裸奔（泄露访问日志与服务器启动时间）。
+	// 如需恢复：加回下面两行 + nginx auth_basic，并恢复 main() 里的 initLogStats()。
+	// r.GET("/v1/logs", logsHandler)
+	// r.GET("/v1/analytics", analyticsHandler)
 	r.GET("/v1/headers", headersHandler)
 	r.GET("/v1/tor/:ip", torHandler)
 	r.GET("/v1/tor", torHandler)
