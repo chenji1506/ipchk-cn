@@ -175,12 +175,14 @@ function detectIPv6ViaWebRTC(): Promise<string> {
       pc.createDataChannel('');
       pc.onicecandidate = (e: any) => {
         if (e.candidate) {
-          const match = e.candidate.candidate.match(/([0-9a-f:]+)/i);
-          if (match) {
-            const ip = match[1];
+          const c = e.candidate.candidate || '';
+          // 标准 ICE 解析：只取 typ host 的 connection-address（第 5 段）。
+          // 不能用 /([0-9a-f:]+)/i 正则——会匹配到 "candidate:" 前缀里的 "ca"。
+          if (c.includes('typ host')) {
+            const addr = c.split(' ')[4];
             // 只接受公网 IPv6（排除链路本地/回环）
-            if (ip.includes(':') && !ip.startsWith('fe80') && ip !== '::1' && !ip.startsWith('fc') && !ip.startsWith('fd')) {
-              resolve(ip);
+            if (addr && addr.includes(':') && !addr.startsWith('fe80') && addr !== '::1' && !addr.startsWith('fc') && !addr.startsWith('fd')) {
+              resolve(addr);
             }
           }
         } else {
