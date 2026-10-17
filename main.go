@@ -2514,7 +2514,7 @@ func pingHandler(c *gin.Context) {
 
 		switch SINGLE_STACK {
 		case "ipv4":
-			ipv4, errV4 := webtest.TCPingRun(host, port, count, "v4", 10*time.Second, 100*time.Millisecond)
+			ipv4, errV4 := webtest.TCPingRun(host, port, count, "v4", 3*time.Second, 100*time.Millisecond)
 			if errV4 != nil {
 				ipv4 = &webtest.TCPingStats{
 					IP: "Error: " + errV4.Error(),
@@ -2525,7 +2525,7 @@ func pingHandler(c *gin.Context) {
 				IP: "Skipped due to SINGLE_STACK=ipv4",
 			}
 		case "ipv6":
-			ipv6, errV6 := webtest.TCPingRun(host, port, count, "v6", 10*time.Second, 100*time.Millisecond)
+			ipv6, errV6 := webtest.TCPingRun(host, port, count, "v6", 3*time.Second, 100*time.Millisecond)
 			if errV6 != nil {
 				ipv6 = &webtest.TCPingStats{
 					IP: "Error: " + errV6.Error(),
@@ -2541,7 +2541,7 @@ func pingHandler(c *gin.Context) {
 
 			go func() {
 				defer wg.Done()
-				ipv6, errV6 := webtest.TCPingRun(host, port, count, "v6", 10*time.Second, 100*time.Millisecond)
+				ipv6, errV6 := webtest.TCPingRun(host, port, count, "v6", 3*time.Second, 100*time.Millisecond)
 				if errV6 != nil {
 					ipv6 = &webtest.TCPingStats{
 						IP: "Error: " + errV6.Error(),
@@ -2552,7 +2552,7 @@ func pingHandler(c *gin.Context) {
 
 			go func() {
 				defer wg.Done()
-				ipv4, errV4 := webtest.TCPingRun(host, port, count, "v4", 10*time.Second, 100*time.Millisecond)
+				ipv4, errV4 := webtest.TCPingRun(host, port, count, "v4", 3*time.Second, 100*time.Millisecond)
 				if errV4 != nil {
 					ipv4 = &webtest.TCPingStats{
 						IP: "Error: " + errV4.Error(),

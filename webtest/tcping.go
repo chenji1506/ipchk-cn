@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"sync"
 	"time"
 )
 
@@ -128,33 +129,39 @@ func TCPingRun(host string, port string, count int, version string, timeout time
 		Port:    port,
 		Sent:    count,
 		MinRTT:  math.MaxFloat64,
-		Results: make([]TCPingResult, 0, count),
+		Results: make([]TCPingResult, count),
 	}
 
 	var totalRTT float64
 	successCount := 0
 
+	// 并发执行 count 次连接测试：目标端口不开放时总耗时 ≈ 单次超时，而非 count×超时
+	var wg sync.WaitGroup
 	for i := 0; i < count; i++ {
-		result, err := TCPing(host, port, version, timeout)
-		if err != nil {
-			return nil, err
-		}
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			result, err := TCPing(host, port, version, timeout)
+			if err != nil {
+				stats.Results[idx] = TCPingResult{IP: "Error: " + err.Error(), Port: port, RTT: -1}
+				return
+			}
+			stats.Results[idx] = *result
+		}(i)
+	}
+	wg.Wait()
 
-		stats.Results = append(stats.Results, *result)
-
-		if result.Success {
+	// 统计成功次数与 RTT
+	for _, r := range stats.Results {
+		if r.Success {
 			successCount++
-			totalRTT += result.RTT
-			if result.RTT > stats.MaxRTT {
-				stats.MaxRTT = result.RTT
+			totalRTT += r.RTT
+			if r.RTT > stats.MaxRTT {
+				stats.MaxRTT = r.RTT
 			}
-			if result.RTT < stats.MinRTT {
-				stats.MinRTT = result.RTT
+			if r.RTT < stats.MinRTT {
+				stats.MinRTT = r.RTT
 			}
-		}
-
-		if i < count-1 && interval > 0 {
-			time.Sleep(interval)
 		}
 	}
 
